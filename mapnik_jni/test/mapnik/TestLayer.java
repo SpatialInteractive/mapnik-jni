@@ -33,5 +33,27 @@ public class TestLayer {
 		assertEquals("two", styles[1]);
 	}
 
-
+	@Test
+	public void testMapLayers() {
+		Map map=new Map();
+		assertEquals(0, map.getLayerCount());
+		
+		Layer layer;
+		
+		layer=new Layer("test1");
+		map.addLayer(layer);
+		assertEquals(1, map.getLayerCount());
+		assertEquals("test1", map.getLayer(0).getName());
+		
+		// layer is a shallow copy - verify
+		layer.setName("blah");
+		assertEquals("test1", map.getLayer(0).getName());
+		
+		// Update it
+		map.setLayer(0, layer);
+		assertEquals("blah", map.getLayer(0).getName());
+		
+		map.removeLayer(0);
+		assertEquals(0, map.getLayerCount());
+	}
 }

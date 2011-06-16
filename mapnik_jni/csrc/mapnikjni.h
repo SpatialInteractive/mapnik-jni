@@ -69,14 +69,6 @@ JNIEXPORT void JNICALL Java_mapnik_Map_loadMapString
 
 /*
  * Class:     mapnik_Map
- * Method:    getLayerCount
- * Signature: ()I
- */
-JNIEXPORT jint JNICALL Java_mapnik_Map_getLayerCount
-  (JNIEnv *, jobject);
-
-/*
- * Class:     mapnik_Map
  * Method:    getWidth
  * Signature: ()I
  */
@@ -162,6 +154,54 @@ JNIEXPORT jstring JNICALL Java_mapnik_Map_getBasePath
  */
 JNIEXPORT void JNICALL Java_mapnik_Map_setBasePath
   (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     mapnik_Map
+ * Method:    getLayerCount
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_mapnik_Map_getLayerCount
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     mapnik_Map
+ * Method:    getLayer
+ * Signature: (I)Lmapnik/Layer;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_Map_getLayer
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     mapnik_Map
+ * Method:    setLayer
+ * Signature: (ILmapnik/Layer;)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_setLayer
+  (JNIEnv *, jobject, jint, jobject);
+
+/*
+ * Class:     mapnik_Map
+ * Method:    removeLayer
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_removeLayer
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     mapnik_Map
+ * Method:    removeAllLayers
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_removeAllLayers
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     mapnik_Map
+ * Method:    addLayer
+ * Signature: (Lmapnik/Layer;)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_addLayer
+  (JNIEnv *, jobject, jobject);
 
 #ifdef __cplusplus
 }

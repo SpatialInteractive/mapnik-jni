@@ -1,15 +1,12 @@
 package mapnik;
 
-import java.util.List;
 
 public class Layer {
 	private long ptr;
-	private Object parentref;
 	
 	private static native long alloc(String name, String srs);
 	private static native void dealloc(long ptr);
 
-	
 	public Layer(String name, String srs) {
 		ptr=alloc(name, srs);
 	}
@@ -18,7 +15,7 @@ public class Layer {
 	}
 	@Override
 	protected void finalize() throws Throwable {
-		if (parentref==null) dealloc(ptr);
+		dealloc(ptr);
 	}
 	
 	public native String getName();

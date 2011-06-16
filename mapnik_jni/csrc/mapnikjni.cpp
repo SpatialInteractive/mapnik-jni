@@ -96,7 +96,7 @@ JNIEXPORT void JNICALL Java_mapnik_Mapnik_nativeInit
 	if (!(
 		init_class(env, "mapnik/Map", CLASS_MAP, false) &&
 		init_class(env, "mapnik/DatasourceCache", CLASS_DATASOURCE_CACHE, false) &&
-		init_class(env, "mapnik/Layer", CLASS_LAYER, true)
+		init_class(env, "mapnik/Layer", CLASS_LAYER, false)
 		)) {
 		throw_error(env, "Error initializing native references");
 		return;
@@ -179,6 +179,89 @@ JNIEXPORT jint JNICALL Java_mapnik_Map_getLayerCount
 {
 	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
 	return (jint)map->layer_count();
+}
+
+/*
+ * Class:     mapnik_Map
+ * Method:    getLayer
+ * Signature: (I)Lmapnik/Layer;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_Map_getLayer
+  (JNIEnv *env, jobject mapobject, jint index)
+{
+	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+	std::vector<mapnik::layer> &layers(map->layers());
+	if (index<0 || index>layers.size()) {
+		return 0;
+	}
+
+	mapnik::layer* layer_copy=new mapnik::layer(layers[index]);
+	jobject layer=env->AllocObject(CLASS_LAYER.java_class);
+	env->SetLongField(layer, CLASS_LAYER.ptr_field, FROM_POINTER(layer_copy));
+	return layer;
+}
+
+/*
+ * Class:     mapnik_Map
+ * Method:    setLayer
+ * Signature: (ILmapnik/Layer;)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_setLayer
+  (JNIEnv *env, jobject mapobject, jint index, jobject layerobject)
+{
+	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+	std::vector<mapnik::layer> &layers(map->layers());
+	if (index<0 || index>layers.size()) {
+		return;
+	}
+
+	if (!layerobject) return;
+	mapnik::layer* layer=
+			static_cast<mapnik::layer*>(TO_POINTER(env->GetLongField(layerobject, CLASS_LAYER.ptr_field)));
+	layers[index]=*layer;
+}
+
+
+/*
+ * Class:     mapnik_Map
+ * Method:    removeLayer
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_removeLayer
+  (JNIEnv *env, jobject mapobject, jint index)
+{
+	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+	map->removeLayer(index);
+}
+
+/*
+ * Class:     mapnik_Map
+ * Method:    addLayer
+ * Signature: (Lmapnik/Layer;)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_addLayer
+  (JNIEnv *env, jobject mapobject, jobject layerobject)
+{
+	if (!layerobject) return;
+
+	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+	mapnik::layer* layer=
+			static_cast<mapnik::layer*>(TO_POINTER(env->GetLongField(layerobject, CLASS_LAYER.ptr_field)));
+
+	map->addLayer(*layer);
+}
+
+/*
+ * Class:     mapnik_Map
+ * Method:    removeAllLayers
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_removeAllLayers
+  (JNIEnv *env, jobject mapobject)
+{
+	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+	std::vector<mapnik::layer> &layers(map->layers());
+	layers.clear();
 }
 
 /*

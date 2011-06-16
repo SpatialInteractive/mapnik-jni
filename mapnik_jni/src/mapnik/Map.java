@@ -28,7 +28,6 @@ public class Map {
 	public native void loadMap(String filename, boolean strict);
 	public native void loadMapString(String str, boolean strict, String basePath);
 	
-	public native int getLayerCount();
 	public native int getWidth();
 	public native int getHeight();
 	public native void setWidth(int width);
@@ -42,4 +41,14 @@ public class Map {
 	
 	public native String getBasePath();
 	public native void setBasePath(String basePath);
+	
+	// Layers
+	public native int getLayerCount();
+	public native Layer getLayer(int index);
+	public native void setLayer(int index, Layer layer);
+	public native void removeLayer(int index);
+	public native void removeAllLayers();
+	public native void addLayer(Layer layer);
+	
+	
 }
