@@ -1,0 +1,11 @@
+libmapnik_jni.jnilib: mapnikjni.cpp mapnikjni.h
+	g++ -dynamiclib -o libmapnik_jni.jnilib \
+		-I/usr/X11/include \
+		-I/usr/X11/include/freetype2 \
+		-I/System/Library/Frameworks/JavaVM.framework/Headers \
+		mapnikjni.cpp \
+		-lmapnik2 -framework JavaVM
+	
+clean:
+	rm libmapnik_jni.jnilib
+	
