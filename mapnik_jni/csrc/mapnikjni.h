@@ -246,6 +246,38 @@ JNIEXPORT void JNICALL Java_mapnik_Map_removeAllLayers
 JNIEXPORT void JNICALL Java_mapnik_Map_addLayer
   (JNIEnv *, jobject, jobject);
 
+/*
+ * Class:     mapnik_Map
+ * Method:    getStyleNames
+ * Signature: ()Ljava/util/Collection;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_Map_getStyleNames
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     mapnik_Map
+ * Method:    getStyle
+ * Signature: (Ljava/lang/String;)Lmapnik/FeatureTypeStyle;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_Map_getStyle
+  (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     mapnik_Map
+ * Method:    addStyle
+ * Signature: (Ljava/lang/String;Lmapnik/FeatureTypeStyle;)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_addStyle
+  (JNIEnv *, jobject, jstring, jobject);
+
+/*
+ * Class:     mapnik_Map
+ * Method:    removeStyle
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_removeStyle
+  (JNIEnv *, jobject, jstring);
+
 #ifdef __cplusplus
 }
 #endif
@@ -472,6 +504,33 @@ JNIEXPORT jobject JNICALL Java_mapnik_Layer_getDatasource
  */
 JNIEXPORT void JNICALL Java_mapnik_Layer_setDatasource
   (JNIEnv *, jobject, jobject);
+
+#ifdef __cplusplus
+}
+#endif
+#endif
+/* Header for class mapnik_FeatureTypeStyle */
+
+#ifndef _Included_mapnik_FeatureTypeStyle
+#define _Included_mapnik_FeatureTypeStyle
+#ifdef __cplusplus
+extern "C" {
+#endif
+/*
+ * Class:     mapnik_FeatureTypeStyle
+ * Method:    alloc
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL Java_mapnik_FeatureTypeStyle_alloc
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     mapnik_FeatureTypeStyle
+ * Method:    dealloc
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_FeatureTypeStyle_dealloc
+  (JNIEnv *, jclass, jlong);
 
 #ifdef __cplusplus
 }

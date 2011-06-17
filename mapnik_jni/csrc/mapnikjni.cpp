@@ -18,16 +18,20 @@ static classinfo_t
 	CLASS_MAP,
 	CLASS_LAYER,
 	CLASS_DATASOURCE,
-	CLASS_DATASOURCE_CACHE;
+	CLASS_DATASOURCE_CACHE,
+	CLASS_FEATURE_TYPE_STYLE;
 static jclass
 	CLASS_STRING,
+	CLASS_HASHSET,
 	CLASS_PARAMETERS;
 static jmethodID
 	CTOR_PARAMETERS,
 	METHOD_PARAMETERS_SET_STRING,
 	METHOD_PARAMETERS_SET_INT,
 	METHOD_PARAMETERS_SET_DOUBLE,
-	METHOD_PARAMETERS_COPY_TO_NATIVE;
+	METHOD_PARAMETERS_COPY_TO_NATIVE,
+	CTOR_HASHSET,
+	METHOD_HASHSET_ADD;
 
 void throw_error(JNIEnv* env, const char* msg) {
 	jclass clazz=env->FindClass("java/lang/Error");
@@ -463,6 +467,78 @@ JNIEXPORT void JNICALL Java_mapnik_Map_setBasePath
 	refjavastring basepath(env, basepathj);
 	map->set_base_path(basepath.stringz);
 }
+
+/*
+ * Class:     mapnik_Map
+ * Method:    getStyleNames
+ * Signature: ()Ljava/util/Collection;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_Map_getStyleNames
+  (JNIEnv *env, jobject mapobject)
+{
+	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+	jobject ret=env->NewObject(CLASS_HASHSET, CTOR_HASHSET);
+	for (mapnik::Map::style_iterator iter=map->begin_styles(); iter!=map->end_styles(); iter++) {
+		jstring name=env->NewStringUTF(iter->first.c_str());
+		env->CallBooleanMethod(ret, METHOD_HASHSET_ADD, name);
+	}
+
+	return ret;
+}
+
+/*
+ * Class:     mapnik_Map
+ * Method:    getStyle
+ * Signature: (Ljava/lang/String;)Lmapnik/FeatureTypeStyle;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_Map_getStyle
+  (JNIEnv *env, jobject mapobject, jstring namej)
+{
+	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+	refjavastring name(env, namej);
+	std::string namestring(name.stringz);
+
+	boost::optional<mapnik::feature_type_style const&> style=map->find_style(namestring);
+	if (!style) return 0;
+
+	mapnik::feature_type_style* stylepinned=new mapnik::feature_type_style(style.get());
+
+	jobject ret=env->AllocObject(CLASS_FEATURE_TYPE_STYLE.java_class);
+	env->SetLongField(ret, CLASS_FEATURE_TYPE_STYLE.ptr_field, FROM_POINTER(stylepinned));
+	return ret;
+}
+
+/*
+ * Class:     mapnik_Map
+ * Method:    addStyle
+ * Signature: (Ljava/lang/String;Lmapnik/FeatureTypeStyle;)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_addStyle
+  (JNIEnv *env, jobject mapobject, jstring namej, jobject styleobject)
+{
+	if (!styleobject) return;
+
+	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+	refjavastring name(env, namej);
+	mapnik::feature_type_style* style=static_cast<mapnik::feature_type_style*>(
+			TO_POINTER(env->GetLongField(styleobject, CLASS_FEATURE_TYPE_STYLE.ptr_field))
+			);
+	map->insert_style(name.stringz, *style);
+}
+
+/*
+ * Class:     mapnik_Map
+ * Method:    removeStyle
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_removeStyle
+  (JNIEnv *env, jobject mapobject, jstring namej)
+{
+	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+	refjavastring name(env, namej);
+	map->remove_style(name.stringz);
+}
+
 
 //// -- Layer class
 /*
@@ -920,6 +996,30 @@ JNIEXPORT jobject JNICALL Java_mapnik_DatasourceCache_create
 	}
 }
 
+/// -- FeatureTypeStyle class
+/*
+ * Class:     mapnik_FeatureTypeStyle
+ * Method:    alloc
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL Java_mapnik_FeatureTypeStyle_alloc
+  (JNIEnv *env, jclass c)
+{
+	return FROM_POINTER(new mapnik::feature_type_style());
+}
+
+/*
+ * Class:     mapnik_FeatureTypeStyle
+ * Method:    dealloc
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_FeatureTypeStyle_dealloc
+  (JNIEnv *env, jclass c, jlong ptr)
+{
+	mapnik::feature_type_style* style=static_cast<mapnik::feature_type_style*>(TO_POINTER(ptr));
+	delete style;
+}
+
 
 /// -- Mapnik class
 /*
@@ -937,7 +1037,8 @@ JNIEXPORT void JNICALL Java_mapnik_Mapnik_nativeInit
 		init_class(env, "mapnik/Map", CLASS_MAP, false) &&
 		init_class(env, "mapnik/Datasource", CLASS_DATASOURCE, false) &&
 		init_class(env, "mapnik/DatasourceCache", CLASS_DATASOURCE_CACHE, false) &&
-		init_class(env, "mapnik/Layer", CLASS_LAYER, false)
+		init_class(env, "mapnik/Layer", CLASS_LAYER, false) &&
+		init_class(env, "mapnik/FeatureTypeStyle", CLASS_FEATURE_TYPE_STYLE, false)
 		)) {
 		throw_error(env, "Error initializing native references");
 		return;
@@ -951,6 +1052,10 @@ JNIEXPORT void JNICALL Java_mapnik_Mapnik_nativeInit
 	METHOD_PARAMETERS_SET_INT=env->GetMethodID(CLASS_PARAMETERS, "setInt", "(Ljava/lang/String;I)V");
 	METHOD_PARAMETERS_SET_DOUBLE=env->GetMethodID(CLASS_PARAMETERS, "setDouble", "(Ljava/lang/String;D)V");
 	METHOD_PARAMETERS_COPY_TO_NATIVE=env->GetMethodID(CLASS_PARAMETERS, "copyToNative", "(J)V");
+
+	CLASS_HASHSET=(jclass)env->NewGlobalRef(env->FindClass("java/util/HashSet"));
+	CTOR_HASHSET=env->GetMethodID(CLASS_HASHSET, "<init>", "()V");
+	METHOD_HASHSET_ADD=env->GetMethodID(CLASS_HASHSET, "add", "(Ljava/lang/Object;)Z");
 
 	initialized=true;
 }

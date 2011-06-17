@@ -84,4 +84,18 @@ public class TestMap {
 		
 		assertEquals(256, map.getBufferSize());
 	}
+	
+	@Test
+	public void testStyle() {
+		Map map=new Map();
+		assertNull(map.getStyle("notexist"));
+		assertEquals(0, map.getStyleNames().size());
+		map.removeStyle("notexist");
+		
+		FeatureTypeStyle style=new FeatureTypeStyle();
+		map.addStyle("test", style);
+		assertEquals(1, map.getStyleNames().size());
+		assertTrue(map.getStyleNames().contains("test"));
+		assertNotNull(map.getStyle("test"));
+	}
 }

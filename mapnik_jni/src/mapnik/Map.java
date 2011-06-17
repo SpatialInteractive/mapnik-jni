@@ -1,5 +1,8 @@
 package mapnik;
 
+import java.util.Collection;
+import java.util.Set;
+
 /**
  * Wrapper around the Mapnik map object and friends
  * @author stella
@@ -49,6 +52,12 @@ public class Map {
 	public native void removeLayer(int index);
 	public native void removeAllLayers();
 	public native void addLayer(Layer layer);
+	
+	// Styles
+	public native Collection<String> getStyleNames();
+	public native FeatureTypeStyle getStyle(String name);
+	public native void addStyle(String name, FeatureTypeStyle style);
+	public native void removeStyle(String name);
 	
 	
 }
