@@ -8,6 +8,7 @@ public class TestLayer {
 	@BeforeClass
 	public static void initMapnik() {
 		Mapnik.initialize();
+		DatasourceCache.registerDatasources("/usr/local/lib/mapnik2/input");
 	}
 
 	@Test
@@ -55,5 +56,23 @@ public class TestLayer {
 		
 		map.removeLayer(0);
 		assertEquals(0, map.getLayerCount());
+	}
+	
+	@Test
+	public void testDatasource() {
+		Layer layer=new Layer("test");
+		assertNull(layer.getDatasource());
+		
+		Parameters params=new Parameters();
+		params.put("type", "postgis");
+		params.put("table", "test");
+		
+		Datasource ds=DatasourceCache.create(params, false);
+		layer.setDatasource(ds);
+		assertNotNull(layer.getDatasource());
+		
+		params=ds.getParameters();
+		assertEquals("postgis", params.get("type"));
+		assertEquals("test", params.get("table"));
 	}
 }

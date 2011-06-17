@@ -51,5 +51,8 @@ public class Layer {
 	public native void setCacheFeatures(boolean b);
 	
 	// -- datasource
+	public native Datasource getDatasource();
+	public native void setDatasource(Datasource datasource);
+	
 	// -- envelope
 }

@@ -2,10 +2,11 @@
 #include <mapnik/map.hpp>
 #include <mapnik/load_map.hpp>
 #include <mapnik/layer.hpp>
+#include <mapnik/datasource_cache.hpp>
 
 #include "mapnikjni.h"
 
-//// -- Mapnik class and globals
+//// -- Globals
 struct classinfo_t {
 	jclass java_class;
 	jfieldID ptr_field;
@@ -16,13 +17,26 @@ static bool initialized=false;
 static classinfo_t
 	CLASS_MAP,
 	CLASS_LAYER,
+	CLASS_DATASOURCE,
 	CLASS_DATASOURCE_CACHE;
 static jclass
-	CLASS_STRING;
+	CLASS_STRING,
+	CLASS_PARAMETERS;
+static jmethodID
+	CTOR_PARAMETERS,
+	METHOD_PARAMETERS_SET_STRING,
+	METHOD_PARAMETERS_SET_INT,
+	METHOD_PARAMETERS_SET_DOUBLE,
+	METHOD_PARAMETERS_COPY_TO_NATIVE;
 
 void throw_error(JNIEnv* env, const char* msg) {
 	jclass clazz=env->FindClass("java/lang/Error");
 	env->ThrowNew(clazz, msg);
+}
+
+void throw_java_exception(JNIEnv* env, std::exception& e) {
+	jclass clazz=env->FindClass("java/lang/RuntimeException");
+	env->ThrowNew(clazz, e.what());
 }
 
 #define ASSERT_INITIALIZED if (!initialized) throw_error(env, "Library not initialized")
@@ -32,6 +46,7 @@ void throw_error(JNIEnv* env, const char* msg) {
 // Pointer access macros
 #define LOAD_MAP_POINTER(mapobj) (static_cast<mapnik::Map*>((void*)(env->GetLongField(mapobj, CLASS_MAP.ptr_field))))
 #define LOAD_LAYER_POINTER(layerobj) (static_cast<mapnik::layer*>((void*)(env->GetLongField(layerobj, CLASS_LAYER.ptr_field))))
+#define LOAD_DATASOURCE_POINTER(dsobj) (static_cast<mapnik::datasource_ptr*>((void*)(env->GetLongField(dsobj, CLASS_DATASOURCE.ptr_field))))
 
 bool init_class(JNIEnv* env, const char* name, classinfo_t& ci, bool has_parentref) {
 	//printf("Initing %s\n", name);
@@ -82,30 +97,80 @@ public:
 	}
 };
 
-/*
- * Class:     mapnik_Mapnik
- * Method:    nativeInit
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_mapnik_Mapnik_nativeInit
-  (JNIEnv *env, jclass c)
-{
-	if (initialized) return;
 
-	// Load classes
-	if (!(
-		init_class(env, "mapnik/Map", CLASS_MAP, false) &&
-		init_class(env, "mapnik/DatasourceCache", CLASS_DATASOURCE_CACHE, false) &&
-		init_class(env, "mapnik/Layer", CLASS_LAYER, false)
-		)) {
-		throw_error(env, "Error initializing native references");
-		return;
+
+//// --- Parameters
+void translate_to_mapnik_parameters(JNIEnv *env, jobject javaparams, mapnik::parameters& mapnikparams)
+{
+	if (!javaparams) return;
+	env->CallVoidMethod(javaparams, METHOD_PARAMETERS_COPY_TO_NATIVE, (jlong)(&mapnikparams));
+}
+
+class translate_parameter_visitor: public boost::static_visitor<>
+{
+	JNIEnv *env;
+	jobject paramobject;
+	jstring key;
+public:
+	translate_parameter_visitor(JNIEnv* aenv, jobject aparamobject, jstring akey): env(aenv), paramobject(aparamobject), key(akey) {
 	}
 
-	CLASS_STRING=(jclass)env->NewGlobalRef(env->FindClass("java/lang/String"));
+	void operator()(const int& value) const {
+		env->CallVoidMethod(paramobject, METHOD_PARAMETERS_SET_INT, key, (jint)value);
+	}
 
-	initialized=true;
+	void operator()(const std::string& value) const {
+		env->CallVoidMethod(paramobject, METHOD_PARAMETERS_SET_STRING,
+				key,
+				env->NewStringUTF(value.c_str()));
+	}
+
+	void operator()(const double& value) const {
+		env->CallVoidMethod(paramobject, METHOD_PARAMETERS_SET_DOUBLE, key, (jdouble)value);
+	}
+};
+
+/*
+ * Class:     mapnik_Parameters
+ * Method:    setNativeInt
+ * Signature: (JLjava/lang/String;I)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Parameters_setNativeInt
+  (JNIEnv *env, jclass c, jlong ptr, jstring namej, jint value)
+{
+	refjavastring name(env, namej);
+	mapnik::parameters *params=(mapnik::parameters*)(ptr);
+	(*params)[name.stringz]=(int)value;
 }
+
+/*
+ * Class:     mapnik_Parameters
+ * Method:    setNativeString
+ * Signature: (JLjava/lang/String;Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Parameters_setNativeString
+  (JNIEnv *env, jclass c, jlong ptr, jstring namej, jstring valuej)
+{
+	refjavastring name(env, namej);
+	refjavastring value(env, valuej);
+	mapnik::parameters *params=(mapnik::parameters*)(ptr);
+	(*params)[name.stringz]=value.stringz;
+}
+
+
+/*
+ * Class:     mapnik_Parameters
+ * Method:    setNativeDouble
+ * Signature: (JLjava/lang/String;D)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Parameters_setNativeDouble
+  (JNIEnv *env, jclass c, jlong ptr, jstring namej, jdouble value)
+{
+	refjavastring name(env, namej);
+	mapnik::parameters *params=(mapnik::parameters*)(ptr);
+	(*params)[name.stringz]=(double)value;
+}
+
 
 //// --- Map class members
 /*
@@ -731,4 +796,161 @@ JNIEXPORT void JNICALL Java_mapnik_Layer_setCacheFeatures
 {
 	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
 	layer->set_cache_features((bool)b);
+}
+
+/*
+ * Class:     mapnik_Layer
+ * Method:    getDatasource
+ * Signature: ()Lmapnik/Datasource;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_Layer_getDatasource
+  (JNIEnv *env, jobject layerobj)
+{
+	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
+	mapnik::datasource_ptr ds=layer->datasource();
+	if (!ds) return 0;
+
+	mapnik::datasource_ptr* dspinned=new mapnik::datasource_ptr(ds);
+	jobject ret=env->AllocObject(CLASS_DATASOURCE.java_class);
+	env->SetLongField(ret, CLASS_DATASOURCE.ptr_field, FROM_POINTER(dspinned));
+
+	return ret;
+}
+
+/*
+ * Class:     mapnik_Layer
+ * Method:    setDatasource
+ * Signature: (Lmapnik/Datasource;)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Layer_setDatasource
+  (JNIEnv *env, jobject layerobj, jobject dsobject)
+{
+	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
+
+	if (!dsobject) {
+		layer->set_datasource(mapnik::datasource_ptr());
+		return;
+	}
+
+	mapnik::datasource_ptr* dspinned=
+			static_cast<mapnik::datasource_ptr*>(
+					TO_POINTER(env->GetLongField(dsobject, CLASS_DATASOURCE.ptr_field)));
+	layer->set_datasource(*dspinned);
+}
+
+// -- Datasource
+/*
+ * Class:     mapnik_Datasource
+ * Method:    dealloc
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Datasource_dealloc
+  (JNIEnv *env, jclass c, jlong ptr)
+{
+	mapnik::datasource_ptr* dspinned=
+			static_cast<mapnik::datasource_ptr*>(
+					TO_POINTER(ptr));
+	delete dspinned;
+
+}
+
+
+/*
+ * Class:     mapnik_Datasource
+ * Method:    getParameters
+ * Signature: ()Lmapnik/Parameters;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_Datasource_getParameters
+  (JNIEnv *env, jobject dsobj)
+{
+	mapnik::datasource_ptr* dsp=LOAD_DATASOURCE_POINTER(dsobj);
+	const mapnik::parameters& params((*dsp)->params());
+
+	jobject paramobject=env->NewObject(CLASS_PARAMETERS, CTOR_PARAMETERS);
+
+	for (mapnik::param_map::const_iterator iter=params.begin(); iter!=params.end(); iter++) {
+		jstring key=env->NewStringUTF(iter->first.c_str());
+		boost::apply_visitor(translate_parameter_visitor(env, paramobject, key), iter->second);
+	}
+
+	return paramobject;
+}
+
+
+//// -- DatasourceCache
+/*
+ * Class:     mapnik_DatasourceCache
+ * Method:    registerDatasources
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_DatasourceCache_registerDatasources
+  (JNIEnv *env, jclass c, jstring sj)
+{
+	try {
+		refjavastring path(env, sj);
+		mapnik::datasource_cache::register_datasources(path.stringz);
+	} catch (std::exception& e) {
+		throw_java_exception(env, e);
+		return;
+	}
+}
+
+/*
+ * Class:     mapnik_DatasourceCache
+ * Method:    create
+ * Signature: (Lmapnik/Parameters;Z)Lmapnik/Datasource;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_DatasourceCache_create
+	(JNIEnv *env, jclass c, jobject paramsmap, jboolean bind)
+{
+	try {
+		mapnik::parameters params;
+		translate_to_mapnik_parameters(env, paramsmap, params);
+
+		mapnik::datasource_ptr ds=mapnik::datasource_cache::create(params, (bool)bind);
+		if (!ds) return 0;
+
+		mapnik::datasource_ptr *dspinned=new mapnik::datasource_ptr(ds);
+		jobject ret=env->AllocObject(CLASS_DATASOURCE.java_class);
+		env->SetLongField(ret, CLASS_DATASOURCE.ptr_field, FROM_POINTER(dspinned));
+		return ret;
+	} catch (std::exception& e) {
+		throw_java_exception(env, e);
+		return 0;
+	}
+}
+
+
+/// -- Mapnik class
+/*
+ * Class:     mapnik_Mapnik
+ * Method:    nativeInit
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Mapnik_nativeInit
+  (JNIEnv *env, jclass c)
+{
+	if (initialized) return;
+
+	// Load classes
+	if (!(
+		init_class(env, "mapnik/Map", CLASS_MAP, false) &&
+		init_class(env, "mapnik/Datasource", CLASS_DATASOURCE, false) &&
+		init_class(env, "mapnik/DatasourceCache", CLASS_DATASOURCE_CACHE, false) &&
+		init_class(env, "mapnik/Layer", CLASS_LAYER, false)
+		)) {
+		throw_error(env, "Error initializing native references");
+		return;
+	}
+
+	CLASS_STRING=(jclass)env->NewGlobalRef(env->FindClass("java/lang/String"));
+
+	CLASS_PARAMETERS=(jclass)env->NewGlobalRef(env->FindClass("mapnik/Parameters"));
+	CTOR_PARAMETERS=env->GetMethodID(CLASS_PARAMETERS, "<init>", "()V");
+	METHOD_PARAMETERS_SET_STRING=env->GetMethodID(CLASS_PARAMETERS, "setString", "(Ljava/lang/String;Ljava/lang/String;)V");
+	METHOD_PARAMETERS_SET_INT=env->GetMethodID(CLASS_PARAMETERS, "setInt", "(Ljava/lang/String;I)V");
+	METHOD_PARAMETERS_SET_DOUBLE=env->GetMethodID(CLASS_PARAMETERS, "setDouble", "(Ljava/lang/String;D)V");
+	METHOD_PARAMETERS_COPY_TO_NATIVE=env->GetMethodID(CLASS_PARAMETERS, "copyToNative", "(J)V");
+
+	initialized=true;
 }
