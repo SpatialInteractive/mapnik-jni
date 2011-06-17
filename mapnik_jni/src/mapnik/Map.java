@@ -1,7 +1,6 @@
 package mapnik;
 
 import java.util.Collection;
-import java.util.Set;
 
 /**
  * Wrapper around the Mapnik map object and friends
@@ -59,5 +58,25 @@ public class Map {
 	public native void addStyle(String name, FeatureTypeStyle style);
 	public native void removeStyle(String name);
 	
+	// Extents
+	public native Box2d getMaximumExtent();
+	public native void setMaximumExtent(Box2d extent);
+	public native Box2d getCurrentExtent();
+	public native Box2d getBufferedExtent();
 	
+	// Movement
+	public native void zoom(double factor);
+	public native void zoomToBox(Box2d box);
+	public native void zoomAll();
+	public native void pan(int x, int y);
+	public native void panAndZoom(int x, int y, double zoom);
+	
+	public native double getScale();
+	public native double getScaleDenominator();
+	
+	// Background
+	public native Color getBackground();
+	public native void setBackground(Color color);
+	public native String getBackgroundImage();
+	public native void setBackgroundImage(String filename);
 }

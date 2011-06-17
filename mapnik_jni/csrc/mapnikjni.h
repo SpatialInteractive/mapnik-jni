@@ -278,6 +278,126 @@ JNIEXPORT void JNICALL Java_mapnik_Map_addStyle
 JNIEXPORT void JNICALL Java_mapnik_Map_removeStyle
   (JNIEnv *, jobject, jstring);
 
+/*
+ * Class:     mapnik_Map
+ * Method:    getMaximumExtent
+ * Signature: ()Lmapnik/Box2d;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_Map_getMaximumExtent
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     mapnik_Map
+ * Method:    setMaximumExtent
+ * Signature: (Lmapnik/Box2d;)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_setMaximumExtent
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     mapnik_Map
+ * Method:    getCurrentExtent
+ * Signature: ()Lmapnik/Box2d;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_Map_getCurrentExtent
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     mapnik_Map
+ * Method:    getBufferedExtent
+ * Signature: ()Lmapnik/Box2d;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_Map_getBufferedExtent
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     mapnik_Map
+ * Method:    zoom
+ * Signature: (D)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_zoom
+  (JNIEnv *, jobject, jdouble);
+
+/*
+ * Class:     mapnik_Map
+ * Method:    zoomToBox
+ * Signature: (Lmapnik/Box2d;)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_zoomToBox
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     mapnik_Map
+ * Method:    zoomAll
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_zoomAll
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     mapnik_Map
+ * Method:    pan
+ * Signature: (II)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_pan
+  (JNIEnv *, jobject, jint, jint);
+
+/*
+ * Class:     mapnik_Map
+ * Method:    panAndZoom
+ * Signature: (IID)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_panAndZoom
+  (JNIEnv *, jobject, jint, jint, jdouble);
+
+/*
+ * Class:     mapnik_Map
+ * Method:    getScale
+ * Signature: ()D
+ */
+JNIEXPORT jdouble JNICALL Java_mapnik_Map_getScale
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     mapnik_Map
+ * Method:    getScaleDenominator
+ * Signature: ()D
+ */
+JNIEXPORT jdouble JNICALL Java_mapnik_Map_getScaleDenominator
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     mapnik_Map
+ * Method:    getBackground
+ * Signature: ()Lmapnik/Color;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_Map_getBackground
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     mapnik_Map
+ * Method:    setBackground
+ * Signature: (Lmapnik/Color;)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_setBackground
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     mapnik_Map
+ * Method:    getBackgroundImage
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_mapnik_Map_getBackgroundImage
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     mapnik_Map
+ * Method:    setBackgroundImage
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_setBackgroundImage
+  (JNIEnv *, jobject, jstring);
+
 #ifdef __cplusplus
 }
 #endif

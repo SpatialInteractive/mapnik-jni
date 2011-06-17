@@ -24,7 +24,9 @@ static classinfo_t
 static jclass
 	CLASS_STRING,
 	CLASS_HASHSET,
-	CLASS_PARAMETERS;
+	CLASS_PARAMETERS,
+	CLASS_BOX2D,
+	CLASS_COLOR;
 static jmethodID
 	CTOR_PARAMETERS,
 	METHOD_PARAMETERS_SET_STRING,
@@ -33,6 +35,16 @@ static jmethodID
 	METHOD_PARAMETERS_COPY_TO_NATIVE,
 	CTOR_HASHSET,
 	METHOD_HASHSET_ADD;
+static jfieldID
+	FIELD_BOX2D_MINX,
+	FIELD_BOX2D_MINY,
+	FIELD_BOX2D_MAXX,
+	FIELD_BOX2D_MAXY,
+
+	FIELD_COLOR_RED,
+	FIELD_COLOR_GREEN,
+	FIELD_COLOR_BLUE,
+	FIELD_COLOR_ALPHA;
 
 void throw_error(JNIEnv* env, const char* msg) {
 	jclass clazz=env->FindClass("java/lang/Error");
@@ -54,7 +66,7 @@ void throw_java_exception(JNIEnv* env, std::exception& e) {
 #define LOAD_DATASOURCE_POINTER(dsobj) (static_cast<mapnik::datasource_ptr*>((void*)(env->GetLongField(dsobj, CLASS_DATASOURCE.ptr_field))))
 #define LOAD_FEATURE_TYPE_STYLE_POINTER(styleobj) (static_cast<mapnik::feature_type_style*>((void*)(env->GetLongField(styleobj, CLASS_FEATURE_TYPE_STYLE.ptr_field))))
 
-bool init_class(JNIEnv* env, const char* name, classinfo_t& ci, bool has_parentref) {
+static bool init_class(JNIEnv* env, const char* name, classinfo_t& ci, bool has_parentref) {
 	//printf("Initing %s\n", name);
 
 	ci.ptr_field=0;
@@ -73,6 +85,52 @@ bool init_class(JNIEnv* env, const char* name, classinfo_t& ci, bool has_parentr
 	}
 
 	//printf("Inited %s\n", name);
+	return true;
+}
+
+static bool init_ids(JNIEnv* env) {
+	// Load classes
+	if (!(
+		init_class(env, "mapnik/Map", CLASS_MAP, false) &&
+		init_class(env, "mapnik/Datasource", CLASS_DATASOURCE, false) &&
+		init_class(env, "mapnik/DatasourceCache", CLASS_DATASOURCE_CACHE, false) &&
+		init_class(env, "mapnik/Layer", CLASS_LAYER, false) &&
+		init_class(env, "mapnik/FeatureTypeStyle", CLASS_FEATURE_TYPE_STYLE, false)
+		)) {
+		throw_error(env, "Error initializing native references");
+		return false;
+	}
+
+	// String
+	CLASS_STRING=(jclass)env->NewGlobalRef(env->FindClass("java/lang/String"));
+
+	// Parameters
+	CLASS_PARAMETERS=(jclass)env->NewGlobalRef(env->FindClass("mapnik/Parameters"));
+	CTOR_PARAMETERS=env->GetMethodID(CLASS_PARAMETERS, "<init>", "()V");
+	METHOD_PARAMETERS_SET_STRING=env->GetMethodID(CLASS_PARAMETERS, "setString", "(Ljava/lang/String;Ljava/lang/String;)V");
+	METHOD_PARAMETERS_SET_INT=env->GetMethodID(CLASS_PARAMETERS, "setInt", "(Ljava/lang/String;I)V");
+	METHOD_PARAMETERS_SET_DOUBLE=env->GetMethodID(CLASS_PARAMETERS, "setDouble", "(Ljava/lang/String;D)V");
+	METHOD_PARAMETERS_COPY_TO_NATIVE=env->GetMethodID(CLASS_PARAMETERS, "copyToNative", "(J)V");
+
+	// HashSet
+	CLASS_HASHSET=(jclass)env->NewGlobalRef(env->FindClass("java/util/HashSet"));
+	CTOR_HASHSET=env->GetMethodID(CLASS_HASHSET, "<init>", "()V");
+	METHOD_HASHSET_ADD=env->GetMethodID(CLASS_HASHSET, "add", "(Ljava/lang/Object;)Z");
+
+	// Box2d
+	CLASS_BOX2D=(jclass)env->NewGlobalRef(env->FindClass("mapnik/Box2d"));
+	FIELD_BOX2D_MINX=env->GetFieldID(CLASS_BOX2D, "minx", "D");
+	FIELD_BOX2D_MINY=env->GetFieldID(CLASS_BOX2D, "miny", "D");
+	FIELD_BOX2D_MAXX=env->GetFieldID(CLASS_BOX2D, "maxx", "D");
+	FIELD_BOX2D_MAXY=env->GetFieldID(CLASS_BOX2D, "maxy", "D");
+
+	// Color
+	CLASS_COLOR=(jclass)env->NewGlobalRef(env->FindClass("mapnik/Color"));
+	FIELD_COLOR_RED=env->GetFieldID(CLASS_COLOR, "red", "I");
+	FIELD_COLOR_GREEN=env->GetFieldID(CLASS_COLOR, "green", "I");
+	FIELD_COLOR_BLUE=env->GetFieldID(CLASS_COLOR, "blue", "I");
+	FIELD_COLOR_ALPHA=env->GetFieldID(CLASS_COLOR, "alpha", "I");
+
 	return true;
 }
 
@@ -103,10 +161,44 @@ public:
 	}
 };
 
+static jobject box2dFromNative(JNIEnv *env, mapnik::box2d<double> const& box) {
+	jobject ret=env->AllocObject(CLASS_BOX2D);
+	env->SetDoubleField(ret, FIELD_BOX2D_MINX, box.minx());
+	env->SetDoubleField(ret, FIELD_BOX2D_MINY, box.miny());
+	env->SetDoubleField(ret, FIELD_BOX2D_MAXX, box.maxx());
+	env->SetDoubleField(ret, FIELD_BOX2D_MAXY, box.maxy());
+	return ret;
+}
 
+static mapnik::box2d<double> box2dToNative(JNIEnv *env, jobject box) {
+	mapnik::box2d<double> ret(
+			env->GetDoubleField(box, FIELD_BOX2D_MINX),
+			env->GetDoubleField(box, FIELD_BOX2D_MINY),
+			env->GetDoubleField(box, FIELD_BOX2D_MAXX),
+			env->GetDoubleField(box, FIELD_BOX2D_MAXY)
+			);
+	return ret;
+}
+
+static mapnik::color colorToNative(JNIEnv *env, jobject c) {
+	return mapnik::color(
+			env->GetIntField(c, FIELD_COLOR_RED),
+			env->GetIntField(c, FIELD_COLOR_GREEN),
+			env->GetIntField(c, FIELD_COLOR_BLUE),
+			env->GetIntField(c, FIELD_COLOR_ALPHA)
+			);
+}
+
+static jobject colorFromNative(JNIEnv *env, mapnik::color const& c) {
+	jobject ret=env->AllocObject(CLASS_COLOR);
+	env->SetIntField(ret, FIELD_COLOR_RED, c.red());
+	env->SetIntField(ret, FIELD_COLOR_GREEN, c.green());
+	env->SetIntField(ret, FIELD_COLOR_BLUE, c.blue());
+	env->SetIntField(ret, FIELD_COLOR_ALPHA, c.alpha());
+}
 
 //// --- Parameters
-void translate_to_mapnik_parameters(JNIEnv *env, jobject javaparams, mapnik::parameters& mapnikparams)
+static void translate_to_mapnik_parameters(JNIEnv *env, jobject javaparams, mapnik::parameters& mapnikparams)
 {
 	if (!javaparams) return;
 	env->CallVoidMethod(javaparams, METHOD_PARAMETERS_COPY_TO_NATIVE, (jlong)(&mapnikparams));
@@ -554,6 +646,205 @@ JNIEXPORT void JNICALL Java_mapnik_Map_removeStyle
 	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
 	refjavastring name(env, namej);
 	map->remove_style(name.stringz);
+}
+
+/*
+ * Class:     mapnik_Map
+ * Method:    getMaximumExtent
+ * Signature: ()Lmapnik/Box2d;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_Map_getMaximumExtent
+  (JNIEnv *env, jobject mapobject)
+{
+	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+	boost::optional<mapnik::box2d<double> > extent=map->maximum_extent();
+	if (!extent) return 0;
+
+	return box2dFromNative(env, extent.get());
+}
+
+/*
+ * Class:     mapnik_Map
+ * Method:    setMaximumExtent
+ * Signature: (Lmapnik/Box2d;)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_setMaximumExtent
+  (JNIEnv *env, jobject mapobject, jobject extentj)
+{
+	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+	if (!extentj) return;
+
+	map->set_maximum_extent(
+			box2dToNative(env, extentj));
+}
+
+/*
+ * Class:     mapnik_Map
+ * Method:    getCurrentExtent
+ * Signature: ()Lmapnik/Box2d;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_Map_getCurrentExtent
+	(JNIEnv *env, jobject mapobject)
+{
+	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+	mapnik::box2d<double> extent=map->get_current_extent();
+	return box2dFromNative(env, extent);
+}
+
+/*
+ * Class:     mapnik_Map
+ * Method:    getBufferedExtent
+ * Signature: ()Lmapnik/Box2d;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_Map_getBufferedExtent
+	(JNIEnv *env, jobject mapobject)
+{
+	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+	mapnik::box2d<double> extent=map->get_buffered_extent();
+	return box2dFromNative(env, extent);
+}
+
+/*
+ * Class:     mapnik_Map
+ * Method:    zoom
+ * Signature: (D)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_zoom
+  (JNIEnv *env, jobject mapobject, jdouble z)
+{
+	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+	map->zoom(z);
+}
+
+/*
+ * Class:     mapnik_Map
+ * Method:    zoomToBox
+ * Signature: (Lmapnik/Box2d;)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_zoomToBox
+  (JNIEnv *env, jobject mapobject, jobject box)
+{
+	if (!box) return;
+
+	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+	map->zoom_to_box(box2dToNative(env, box));
+}
+
+/*
+ * Class:     mapnik_Map
+ * Method:    zoomAll
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_zoomAll
+  (JNIEnv *env, jobject mapobject)
+{
+	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+	map->zoom_all();
+}
+
+/*
+ * Class:     mapnik_Map
+ * Method:    pan
+ * Signature: (II)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_pan
+  (JNIEnv *env, jobject mapobject, jint x, jint y)
+{
+	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+	map->pan(x, y);
+}
+
+/*
+ * Class:     mapnik_Map
+ * Method:    panAndZoom
+ * Signature: (IID)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_panAndZoom
+  (JNIEnv *env, jobject mapobject, jint x, jint y, jdouble z)
+{
+	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+	map->pan_and_zoom(x, y, z);
+}
+
+/*
+ * Class:     mapnik_Map
+ * Method:    getScale
+ * Signature: ()D
+ */
+JNIEXPORT jdouble JNICALL Java_mapnik_Map_getScale
+  (JNIEnv *env, jobject mapobject)
+{
+	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+	return map->scale();
+}
+
+/*
+ * Class:     mapnik_Map
+ * Method:    getScaleDenominator
+ * Signature: ()D
+ */
+JNIEXPORT jdouble JNICALL Java_mapnik_Map_getScaleDenominator
+	(JNIEnv *env, jobject mapobject)
+{
+	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+	return map->scale_denominator();
+}
+
+/*
+ * Class:     mapnik_Map
+ * Method:    getBackground
+ * Signature: ()Lmapnik/Color;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_Map_getBackground
+  (JNIEnv *env, jobject mapobject)
+{
+	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+	boost::optional<mapnik::color> const& color(map->background());
+	if (!color) return 0;
+
+	return colorFromNative(env, color.get());
+}
+
+/*
+ * Class:     mapnik_Map
+ * Method:    setBackground
+ * Signature: (Lmapnik/Color;)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_setBackground
+  (JNIEnv *env, jobject mapobject, jobject c)
+{
+	if (!c) return;
+	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+	map->set_background(colorToNative(env, c));
+}
+
+/*
+ * Class:     mapnik_Map
+ * Method:    getBackgroundImage
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_mapnik_Map_getBackgroundImage
+  (JNIEnv *env, jobject mapobject)
+{
+	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+	boost::optional<std::string> const& image(map->background_image());
+	if (!image) return 0;
+
+	return env->NewStringUTF(image.get().c_str());
+}
+
+/*
+ * Class:     mapnik_Map
+ * Method:    setBackgroundImage
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_setBackgroundImage
+  (JNIEnv *env, jobject mapobject, jstring filenamej)
+{
+	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+	if (!filenamej) return;
+	refjavastring filename(env, filenamej);
+	map->set_background_image(filename.stringz);
 }
 
 
@@ -1073,31 +1364,6 @@ JNIEXPORT void JNICALL Java_mapnik_Mapnik_nativeInit
   (JNIEnv *env, jclass c)
 {
 	if (initialized) return;
-
-	// Load classes
-	if (!(
-		init_class(env, "mapnik/Map", CLASS_MAP, false) &&
-		init_class(env, "mapnik/Datasource", CLASS_DATASOURCE, false) &&
-		init_class(env, "mapnik/DatasourceCache", CLASS_DATASOURCE_CACHE, false) &&
-		init_class(env, "mapnik/Layer", CLASS_LAYER, false) &&
-		init_class(env, "mapnik/FeatureTypeStyle", CLASS_FEATURE_TYPE_STYLE, false)
-		)) {
-		throw_error(env, "Error initializing native references");
-		return;
-	}
-
-	CLASS_STRING=(jclass)env->NewGlobalRef(env->FindClass("java/lang/String"));
-
-	CLASS_PARAMETERS=(jclass)env->NewGlobalRef(env->FindClass("mapnik/Parameters"));
-	CTOR_PARAMETERS=env->GetMethodID(CLASS_PARAMETERS, "<init>", "()V");
-	METHOD_PARAMETERS_SET_STRING=env->GetMethodID(CLASS_PARAMETERS, "setString", "(Ljava/lang/String;Ljava/lang/String;)V");
-	METHOD_PARAMETERS_SET_INT=env->GetMethodID(CLASS_PARAMETERS, "setInt", "(Ljava/lang/String;I)V");
-	METHOD_PARAMETERS_SET_DOUBLE=env->GetMethodID(CLASS_PARAMETERS, "setDouble", "(Ljava/lang/String;D)V");
-	METHOD_PARAMETERS_COPY_TO_NATIVE=env->GetMethodID(CLASS_PARAMETERS, "copyToNative", "(J)V");
-
-	CLASS_HASHSET=(jclass)env->NewGlobalRef(env->FindClass("java/util/HashSet"));
-	CTOR_HASHSET=env->GetMethodID(CLASS_HASHSET, "<init>", "()V");
-	METHOD_HASHSET_ADD=env->GetMethodID(CLASS_HASHSET, "add", "(Ljava/lang/Object;)Z");
-
-	initialized=true;
+	if (init_ids(env))
+		initialized=true;
 }
