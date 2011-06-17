@@ -532,6 +532,14 @@ JNIEXPORT jlong JNICALL Java_mapnik_FeatureTypeStyle_alloc
 JNIEXPORT void JNICALL Java_mapnik_FeatureTypeStyle_dealloc
   (JNIEnv *, jclass, jlong);
 
+/*
+ * Class:     mapnik_FeatureTypeStyle
+ * Method:    collectAttributes
+ * Signature: ()Ljava/util/Set;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_FeatureTypeStyle_collectAttributes
+  (JNIEnv *, jobject);
+
 #ifdef __cplusplus
 }
 #endif

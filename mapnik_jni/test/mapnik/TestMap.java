@@ -1,5 +1,8 @@
 package mapnik;
 
+import java.util.Arrays;
+import java.util.Set;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -97,5 +100,18 @@ public class TestMap {
 		assertEquals(1, map.getStyleNames().size());
 		assertTrue(map.getStyleNames().contains("test"));
 		assertNotNull(map.getStyle("test"));
+	}
+	
+	@Test
+	public void testCollectAttributes() {
+		Map map=new Map();
+		map.loadMap("test/testmap.xml", false);
+		FeatureTypeStyle style=map.getStyle("landmark-poly-text");
+		
+		String[] attrs=style.collectAttributes().toArray(new String[0]);
+		Arrays.sort(attrs);
+		
+		System.out.println("Attrs: " + Arrays.toString(attrs));
+		assertTrue(Arrays.equals(attrs, new String[] {"landuse", "leisure", "name", "way_area" }));
 	}
 }

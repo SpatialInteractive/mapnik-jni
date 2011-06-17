@@ -1,5 +1,7 @@
 package mapnik;
 
+import java.util.Set;
+
 /**
  * Mirrors the feature_type_style in mapnik c++
  *
@@ -19,4 +21,10 @@ public class FeatureTypeStyle {
 	protected void finalize() throws Throwable {
 		dealloc(ptr);
 	}
+	
+	/**
+	 * Collect all attribute names referenced in rules
+	 * @return Set of attributes
+	 */
+	public native Set<String> collectAttributes();
 }

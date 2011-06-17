@@ -3,6 +3,7 @@
 #include <mapnik/load_map.hpp>
 #include <mapnik/layer.hpp>
 #include <mapnik/datasource_cache.hpp>
+#include <mapnik/attribute_collector.hpp>
 
 #include "mapnikjni.h"
 
@@ -51,6 +52,7 @@ void throw_java_exception(JNIEnv* env, std::exception& e) {
 #define LOAD_MAP_POINTER(mapobj) (static_cast<mapnik::Map*>((void*)(env->GetLongField(mapobj, CLASS_MAP.ptr_field))))
 #define LOAD_LAYER_POINTER(layerobj) (static_cast<mapnik::layer*>((void*)(env->GetLongField(layerobj, CLASS_LAYER.ptr_field))))
 #define LOAD_DATASOURCE_POINTER(dsobj) (static_cast<mapnik::datasource_ptr*>((void*)(env->GetLongField(dsobj, CLASS_DATASOURCE.ptr_field))))
+#define LOAD_FEATURE_TYPE_STYLE_POINTER(styleobj) (static_cast<mapnik::feature_type_style*>((void*)(env->GetLongField(styleobj, CLASS_FEATURE_TYPE_STYLE.ptr_field))))
 
 bool init_class(JNIEnv* env, const char* name, classinfo_t& ci, bool has_parentref) {
 	//printf("Initing %s\n", name);
@@ -222,7 +224,17 @@ JNIEXPORT void JNICALL Java_mapnik_Map_dealloc
  * Signature: (Ljava/lang/String;Z)V
  */
 JNIEXPORT void JNICALL Java_mapnik_Map_loadMap
-  (JNIEnv *, jobject, jstring, jboolean);
+  (JNIEnv *env, jobject mapobject, jstring filenamej, jboolean strict)
+{
+	try {
+		mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+		refjavastring filename(env, filenamej);
+		mapnik::load_map(*map, filename.stringz, (bool)strict);
+	} catch (std::exception& e) {
+		throw_java_exception(env, e);
+		return;
+	}
+}
 
 /*
  * Class:     mapnik_Map
@@ -232,10 +244,15 @@ JNIEXPORT void JNICALL Java_mapnik_Map_loadMap
 JNIEXPORT void JNICALL Java_mapnik_Map_loadMapString
   (JNIEnv *env, jobject mapobject, jstring strj, jboolean strict, jstring basepathj)
 {
-	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
-	refjavastring str(env, strj);
-	refjavastring basepath(env, basepathj);
-	mapnik::load_map_string(*map, str.stringz, (bool)strict, basepath.stringz);
+	try {
+		mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+		refjavastring str(env, strj);
+		refjavastring basepath(env, basepathj);
+		mapnik::load_map_string(*map, str.stringz, (bool)strict, basepath.stringz);
+	} catch (std::exception& e) {
+		throw_java_exception(env, e);
+		return;
+	}
 }
 
 /*
@@ -1020,6 +1037,31 @@ JNIEXPORT void JNICALL Java_mapnik_FeatureTypeStyle_dealloc
 	delete style;
 }
 
+/*
+ * Class:     mapnik_FeatureTypeStyle
+ * Method:    collectAttributes
+ * Signature: ()Ljava/util/Set;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_FeatureTypeStyle_collectAttributes
+  (JNIEnv *env, jobject styleobject)
+{
+	mapnik::feature_type_style* style=LOAD_FEATURE_TYPE_STYLE_POINTER(styleobject);
+	const std::vector<mapnik::rule>& rules(style->get_rules());
+
+	std::set<std::string> attrs;
+	mapnik::attribute_collector collector(attrs);
+	BOOST_FOREACH(mapnik::rule const& r, rules) {
+		collector(r);
+	}
+
+
+	jobject ret=env->NewObject(CLASS_HASHSET, CTOR_HASHSET);
+	for (std::set<std::string>::iterator iter=attrs.begin(); iter!=attrs.end(); iter++) {
+		env->CallBooleanMethod(ret, METHOD_HASHSET_ADD, env->NewStringUTF(iter->c_str()));
+	}
+
+	return ret;
+}
 
 /// -- Mapnik class
 /*
