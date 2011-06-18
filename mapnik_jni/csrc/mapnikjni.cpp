@@ -21,7 +21,9 @@ static classinfo_t
 	CLASS_DATASOURCE,
 	CLASS_DATASOURCE_CACHE,
 	CLASS_FEATURE_TYPE_STYLE,
-	CLASS_PROJECTION;
+	CLASS_PROJECTION,
+	CLASS_QUERY,
+	CLASS_FEATURESET;
 static jclass
 	CLASS_STRING,
 	CLASS_HASHSET,
@@ -86,6 +88,8 @@ void throw_java_exception(JNIEnv* env, std::exception& e) {
 #define LOAD_DATASOURCE_POINTER(dsobj) (static_cast<mapnik::datasource_ptr*>((void*)(env->GetLongField(dsobj, CLASS_DATASOURCE.ptr_field))))
 #define LOAD_FEATURE_TYPE_STYLE_POINTER(styleobj) (static_cast<mapnik::feature_type_style*>((void*)(env->GetLongField(styleobj, CLASS_FEATURE_TYPE_STYLE.ptr_field))))
 #define LOAD_PROJECTION_POINTER(projobj) (static_cast<mapnik::projection*>((void*)(env->GetLongField(projobj, CLASS_PROJECTION.ptr_field))))
+#define LOAD_QUERY_POINTER(qobj) (static_cast<mapnik::query*>((void*)(env->GetLongField(qobj, CLASS_QUERY.ptr_field))))
+#define LOAD_FEATURESET_POINTER(fsobj) (static_cast<mapnik::featureset_ptr*>((void*)(env->GetLongField(fsobj, CLASS_FEATURESET.ptr_field))))
 
 // Exception handling
 #define PREAMBLE try {
@@ -122,7 +126,9 @@ static bool init_ids(JNIEnv* env) {
 		init_class(env, "mapnik/DatasourceCache", CLASS_DATASOURCE_CACHE, false) &&
 		init_class(env, "mapnik/Layer", CLASS_LAYER, false) &&
 		init_class(env, "mapnik/FeatureTypeStyle", CLASS_FEATURE_TYPE_STYLE, false) &&
-		init_class(env, "mapnik/Projection", CLASS_PROJECTION, false)
+		init_class(env, "mapnik/Projection", CLASS_PROJECTION, false) &&
+		init_class(env, "mapnik/Query", CLASS_QUERY, false) &&
+		init_class(env, "mapnik/FeatureSet", CLASS_FEATURESET, false)
 		)) {
 		throw_error(env, "Error initializing native references");
 		return false;
@@ -1356,7 +1362,22 @@ JNIEXPORT jobject JNICALL Java_mapnik_Datasource_getEnvelope
  * Signature: (Lmapnik/Query;)Lmapnik/FeatureSet;
  */
 JNIEXPORT jobject JNICALL Java_mapnik_Datasource_features
-  (JNIEnv *, jobject, jobject);
+  (JNIEnv *env, jobject dsobj, jobject queryobj)
+{
+	PREAMBLE;
+	if (!queryobj) return 0;
+
+	mapnik::datasource_ptr* dsp=LOAD_DATASOURCE_POINTER(dsobj);
+	mapnik::query* query=LOAD_QUERY_POINTER(queryobj);
+
+	mapnik::featureset_ptr fs=(*dsp)->features(*query);
+	mapnik::featureset_ptr* fspinned=new mapnik::featureset_ptr(fs);
+
+	jobject ret=env->AllocObject(CLASS_FEATURESET.java_class);
+	env->SetLongField(ret, CLASS_FEATURESET.ptr_field, FROM_POINTER(fspinned));
+
+	TRAILER;
+}
 
 /*
  * Class:     mapnik_Datasource
@@ -1364,7 +1385,25 @@ JNIEXPORT jobject JNICALL Java_mapnik_Datasource_features
  * Signature: (Lmapnik/Coord;)Lmapnik/FeatureSet;
  */
 JNIEXPORT jobject JNICALL Java_mapnik_Datasource_featuresAtPoint
-  (JNIEnv *, jobject, jobject);
+  (JNIEnv *env, jobject dsobj, jobject ptobj)
+{
+	PREAMBLE;
+	if (!ptobj) return 0;
+
+	mapnik::datasource_ptr* dsp=LOAD_DATASOURCE_POINTER(dsobj);
+	mapnik::coord2d pt(
+		env->GetDoubleField(ptobj, FIELD_COORD_X),
+		env->GetDoubleField(ptobj, FIELD_COORD_Y)
+		);
+
+	mapnik::featureset_ptr fs=(*dsp)->features_at_point(pt);
+	mapnik::featureset_ptr* fspinned=new mapnik::featureset_ptr(fs);
+
+	jobject ret=env->AllocObject(CLASS_FEATURESET.java_class);
+	env->SetLongField(ret, CLASS_FEATURESET.ptr_field, FROM_POINTER(fspinned));
+
+	TRAILER;
+}
 
 /*
  * Class:     mapnik_Datasource
