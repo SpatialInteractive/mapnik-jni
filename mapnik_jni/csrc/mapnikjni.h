@@ -718,3 +718,62 @@ JNIEXPORT jobject JNICALL Java_mapnik_DatasourceCache_create
 }
 #endif
 #endif
+/* Header for class mapnik_Projection */
+
+#ifndef _Included_mapnik_Projection
+#define _Included_mapnik_Projection
+#ifdef __cplusplus
+extern "C" {
+#endif
+/*
+ * Class:     mapnik_Projection
+ * Method:    alloc
+ * Signature: (Ljava/lang/String;)J
+ */
+JNIEXPORT jlong JNICALL Java_mapnik_Projection_alloc
+  (JNIEnv *, jclass, jstring);
+
+/*
+ * Class:     mapnik_Projection
+ * Method:    dealloc
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Projection_dealloc
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     mapnik_Projection
+ * Method:    getParams
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_mapnik_Projection_getParams
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     mapnik_Projection
+ * Method:    getExpanded
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_mapnik_Projection_getExpanded
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     mapnik_Projection
+ * Method:    forward
+ * Signature: (Lmapnik/Coord;)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Projection_forward
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     mapnik_Projection
+ * Method:    inverse
+ * Signature: (Lmapnik/Coord;)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Projection_inverse
+  (JNIEnv *, jobject, jobject);
+
+#ifdef __cplusplus
+}
+#endif
+#endif

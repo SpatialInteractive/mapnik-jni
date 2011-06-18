@@ -3,7 +3,7 @@
 		<mkdir dir="build/classes"/>
 		<mkdir dir="csrc"/>
 		<javac srcdir="src" destdir="build/classes" debug="on" source="1.5" target="1.5" includeantruntime="false"/>
-		<javah class="mapnik.Parameters,mapnik.Mapnik,mapnik.Map,mapnik.Layer,mapnik.FeatureTypeStyle,mapnik.Datasource,mapnik.DatasourceCache" outputfile="csrc/mapnikjni.h" classpath="build/classes"/>
+		<javah class="mapnik.Parameters,mapnik.Mapnik,mapnik.Map,mapnik.Layer,mapnik.FeatureTypeStyle,mapnik.Datasource,mapnik.DatasourceCache,mapnik.Projection" outputfile="csrc/mapnikjni.h" classpath="build/classes"/>
 	</target>
 	
 	<target name="jar" depends="compile">

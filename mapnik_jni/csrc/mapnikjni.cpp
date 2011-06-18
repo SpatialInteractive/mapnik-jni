@@ -20,13 +20,15 @@ static classinfo_t
 	CLASS_LAYER,
 	CLASS_DATASOURCE,
 	CLASS_DATASOURCE_CACHE,
-	CLASS_FEATURE_TYPE_STYLE;
+	CLASS_FEATURE_TYPE_STYLE,
+	CLASS_PROJECTION;
 static jclass
 	CLASS_STRING,
 	CLASS_HASHSET,
 	CLASS_PARAMETERS,
 	CLASS_BOX2D,
-	CLASS_COLOR;
+	CLASS_COLOR,
+	CLASS_COORD;
 static jmethodID
 	CTOR_PARAMETERS,
 	METHOD_PARAMETERS_SET_STRING,
@@ -44,7 +46,10 @@ static jfieldID
 	FIELD_COLOR_RED,
 	FIELD_COLOR_GREEN,
 	FIELD_COLOR_BLUE,
-	FIELD_COLOR_ALPHA;
+	FIELD_COLOR_ALPHA,
+
+	FIELD_COORD_X,
+	FIELD_COORD_Y;
 
 void throw_error(JNIEnv* env, const char* msg) {
 	jclass clazz=env->FindClass("java/lang/Error");
@@ -65,6 +70,7 @@ void throw_java_exception(JNIEnv* env, std::exception& e) {
 #define LOAD_LAYER_POINTER(layerobj) (static_cast<mapnik::layer*>((void*)(env->GetLongField(layerobj, CLASS_LAYER.ptr_field))))
 #define LOAD_DATASOURCE_POINTER(dsobj) (static_cast<mapnik::datasource_ptr*>((void*)(env->GetLongField(dsobj, CLASS_DATASOURCE.ptr_field))))
 #define LOAD_FEATURE_TYPE_STYLE_POINTER(styleobj) (static_cast<mapnik::feature_type_style*>((void*)(env->GetLongField(styleobj, CLASS_FEATURE_TYPE_STYLE.ptr_field))))
+#define LOAD_PROJECTION_POINTER(projobj) (static_cast<mapnik::projection*>((void*)(env->GetLongField(projobj, CLASS_PROJECTION.ptr_field))))
 
 static bool init_class(JNIEnv* env, const char* name, classinfo_t& ci, bool has_parentref) {
 	//printf("Initing %s\n", name);
@@ -95,7 +101,8 @@ static bool init_ids(JNIEnv* env) {
 		init_class(env, "mapnik/Datasource", CLASS_DATASOURCE, false) &&
 		init_class(env, "mapnik/DatasourceCache", CLASS_DATASOURCE_CACHE, false) &&
 		init_class(env, "mapnik/Layer", CLASS_LAYER, false) &&
-		init_class(env, "mapnik/FeatureTypeStyle", CLASS_FEATURE_TYPE_STYLE, false)
+		init_class(env, "mapnik/FeatureTypeStyle", CLASS_FEATURE_TYPE_STYLE, false) &&
+		init_class(env, "mapnik/Projection", CLASS_PROJECTION, false)
 		)) {
 		throw_error(env, "Error initializing native references");
 		return false;
@@ -130,6 +137,11 @@ static bool init_ids(JNIEnv* env) {
 	FIELD_COLOR_GREEN=env->GetFieldID(CLASS_COLOR, "green", "I");
 	FIELD_COLOR_BLUE=env->GetFieldID(CLASS_COLOR, "blue", "I");
 	FIELD_COLOR_ALPHA=env->GetFieldID(CLASS_COLOR, "alpha", "I");
+
+	// Coord
+	CLASS_COORD=(jclass)env->NewGlobalRef(env->FindClass("mapnik/Coord"));
+	FIELD_COORD_X=env->GetFieldID(CLASS_COORD, "x", "D");
+	FIELD_COORD_Y=env->GetFieldID(CLASS_COORD, "y", "D");
 
 	return true;
 }
@@ -1353,6 +1365,90 @@ JNIEXPORT jobject JNICALL Java_mapnik_FeatureTypeStyle_collectAttributes
 
 	return ret;
 }
+
+/// -- Projection class
+/*
+ * Class:     mapnik_Projection
+ * Method:    alloc
+ * Signature: (Ljava/lang/String;)J
+ */
+JNIEXPORT jlong JNICALL Java_mapnik_Projection_alloc
+  (JNIEnv *env, jclass c, jstring paramsj)
+{
+	refjavastring params(env, paramsj);
+	mapnik::projection* prj=new mapnik::projection(params.stringz);
+	return FROM_POINTER(prj);
+}
+
+/*
+ * Class:     mapnik_Projection
+ * Method:    dealloc
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Projection_dealloc
+  (JNIEnv *env, jclass c, jlong ptr)
+{
+	delete static_cast<mapnik::projection*>(TO_POINTER(ptr));
+}
+
+/*
+ * Class:     mapnik_Projection
+ * Method:    getParams
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_mapnik_Projection_getParams
+  (JNIEnv *env, jobject prjobject)
+{
+	mapnik::projection* prj=LOAD_PROJECTION_POINTER(prjobject);
+	return env->NewStringUTF(prj->params().c_str());
+}
+
+/*
+ * Class:     mapnik_Projection
+ * Method:    getExpanded
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_mapnik_Projection_getExpanded
+  (JNIEnv *env, jobject prjobject)
+{
+	mapnik::projection* prj=LOAD_PROJECTION_POINTER(prjobject);
+	return env->NewStringUTF(prj->expanded().c_str());
+}
+
+/*
+ * Class:     mapnik_Projection
+ * Method:    forward
+ * Signature: (Lmapnik/Coord;)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Projection_forward
+  (JNIEnv *env, jobject prjobject, jobject coord)
+{
+	if (!coord) return;
+	mapnik::projection* prj=LOAD_PROJECTION_POINTER(prjobject);
+	double x=env->GetDoubleField(coord, FIELD_COORD_X),
+			y=env->GetDoubleField(coord, FIELD_COORD_Y);
+	prj->forward(x, y);
+	env->SetDoubleField(coord, FIELD_COORD_X, x);
+	env->SetDoubleField(coord, FIELD_COORD_Y, y);
+}
+
+/*
+ * Class:     mapnik_Projection
+ * Method:    inverse
+ * Signature: (Lmapnik/Coord;)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Projection_inverse
+	(JNIEnv *env, jobject prjobject, jobject coord)
+{
+	if (!coord) return;
+	mapnik::projection* prj=LOAD_PROJECTION_POINTER(prjobject);
+	double x=env->GetDoubleField(coord, FIELD_COORD_X),
+			y=env->GetDoubleField(coord, FIELD_COORD_Y);
+	prj->inverse(x, y);
+	env->SetDoubleField(coord, FIELD_COORD_X, x);
+	env->SetDoubleField(coord, FIELD_COORD_Y, y);
+}
+
 
 /// -- Mapnik class
 /*
