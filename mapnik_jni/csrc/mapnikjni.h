@@ -687,6 +687,54 @@ JNIEXPORT void JNICALL Java_mapnik_Datasource_dealloc
 JNIEXPORT jobject JNICALL Java_mapnik_Datasource_getParameters
   (JNIEnv *, jobject);
 
+/*
+ * Class:     mapnik_Datasource
+ * Method:    getType
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_mapnik_Datasource_getType
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     mapnik_Datasource
+ * Method:    bind
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Datasource_bind
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     mapnik_Datasource
+ * Method:    getEnvelope
+ * Signature: ()Lmapnik/Box2d;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_Datasource_getEnvelope
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     mapnik_Datasource
+ * Method:    features
+ * Signature: (Lmapnik/Query;)Lmapnik/FeatureSet;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_Datasource_features
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     mapnik_Datasource
+ * Method:    featuresAtPoint
+ * Signature: (Lmapnik/Coord;)Lmapnik/FeatureSet;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_Datasource_featuresAtPoint
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     mapnik_Datasource
+ * Method:    getDescriptor
+ * Signature: ()Lmapnik/LayerDescriptor;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_Datasource_getDescriptor
+  (JNIEnv *, jobject);
+
 #ifdef __cplusplus
 }
 #endif
@@ -772,6 +820,41 @@ JNIEXPORT void JNICALL Java_mapnik_Projection_forward
  */
 JNIEXPORT void JNICALL Java_mapnik_Projection_inverse
   (JNIEnv *, jobject, jobject);
+
+#ifdef __cplusplus
+}
+#endif
+#endif
+/* Header for class mapnik_Query */
+
+#ifndef _Included_mapnik_Query
+#define _Included_mapnik_Query
+#ifdef __cplusplus
+extern "C" {
+#endif
+/*
+ * Class:     mapnik_Query
+ * Method:    alloc
+ * Signature: (Lmapnik/Box2d;DDD)J
+ */
+JNIEXPORT jlong JNICALL Java_mapnik_Query_alloc
+  (JNIEnv *, jclass, jobject, jdouble, jdouble, jdouble);
+
+/*
+ * Class:     mapnik_Query
+ * Method:    dealloc
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Query_dealloc
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     mapnik_Query
+ * Method:    addPropertyName
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Query_addPropertyName
+  (JNIEnv *, jobject, jstring);
 
 #ifdef __cplusplus
 }

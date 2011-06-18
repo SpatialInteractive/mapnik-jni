@@ -28,7 +28,9 @@ static jclass
 	CLASS_PARAMETERS,
 	CLASS_BOX2D,
 	CLASS_COLOR,
-	CLASS_COORD;
+	CLASS_COORD,
+	CLASS_LAYERDESCRIPTOR,
+	CLASS_ATTRIBUTEDESCRIPTOR;
 static jmethodID
 	CTOR_PARAMETERS,
 	METHOD_PARAMETERS_SET_STRING,
@@ -36,7 +38,10 @@ static jmethodID
 	METHOD_PARAMETERS_SET_DOUBLE,
 	METHOD_PARAMETERS_COPY_TO_NATIVE,
 	CTOR_HASHSET,
-	METHOD_HASHSET_ADD;
+	METHOD_HASHSET_ADD,
+	CTOR_LAYERDESCRIPTOR,
+	METHOD_LAYERDESCRIPTOR_ADDDESCRIPTOR,
+	CTOR_ATTRIBUTEDESCRIPTOR;
 static jfieldID
 	FIELD_BOX2D_MINX,
 	FIELD_BOX2D_MINY,
@@ -49,7 +54,17 @@ static jfieldID
 	FIELD_COLOR_ALPHA,
 
 	FIELD_COORD_X,
-	FIELD_COORD_Y;
+	FIELD_COORD_Y,
+
+	FIELD_LAYERDESCRIPTOR_NAME,
+	FIELD_LAYERDESCRIPTOR_ENCODING,
+
+	FIELD_ATTRIBUTEDESCRIPTOR_NAME,
+	FIELD_ATTRIBUTEDESCRIPTOR_TYPE,
+	FIELD_ATTRIBUTEDESCRIPTOR_PRIMARYKEY,
+	FIELD_ATTRIBUTEDESCRIPTOR_SIZE,
+	FIELD_ATTRIBUTEDESCRIPTOR_PRECISION;
+
 
 void throw_error(JNIEnv* env, const char* msg) {
 	jclass clazz=env->FindClass("java/lang/Error");
@@ -71,6 +86,11 @@ void throw_java_exception(JNIEnv* env, std::exception& e) {
 #define LOAD_DATASOURCE_POINTER(dsobj) (static_cast<mapnik::datasource_ptr*>((void*)(env->GetLongField(dsobj, CLASS_DATASOURCE.ptr_field))))
 #define LOAD_FEATURE_TYPE_STYLE_POINTER(styleobj) (static_cast<mapnik::feature_type_style*>((void*)(env->GetLongField(styleobj, CLASS_FEATURE_TYPE_STYLE.ptr_field))))
 #define LOAD_PROJECTION_POINTER(projobj) (static_cast<mapnik::projection*>((void*)(env->GetLongField(projobj, CLASS_PROJECTION.ptr_field))))
+
+// Exception handling
+#define PREAMBLE try {
+#define TRAILER } catch (std::exception& e) { throw_java_exception(env, e); }
+
 
 static bool init_class(JNIEnv* env, const char* name, classinfo_t& ci, bool has_parentref) {
 	//printf("Initing %s\n", name);
@@ -142,6 +162,22 @@ static bool init_ids(JNIEnv* env) {
 	CLASS_COORD=(jclass)env->NewGlobalRef(env->FindClass("mapnik/Coord"));
 	FIELD_COORD_X=env->GetFieldID(CLASS_COORD, "x", "D");
 	FIELD_COORD_Y=env->GetFieldID(CLASS_COORD, "y", "D");
+
+	// LayerDescriptor
+	CLASS_LAYERDESCRIPTOR=(jclass)env->NewGlobalRef(env->FindClass("mapnik/LayerDescriptor"));
+	CTOR_LAYERDESCRIPTOR=env->GetMethodID(CLASS_LAYERDESCRIPTOR, "<init>", "()V");
+	FIELD_LAYERDESCRIPTOR_NAME=env->GetFieldID(CLASS_LAYERDESCRIPTOR, "name", "Ljava/lang/String;");
+	FIELD_LAYERDESCRIPTOR_ENCODING=env->GetFieldID(CLASS_LAYERDESCRIPTOR, "encoding", "Ljava/lang/String;");
+	METHOD_LAYERDESCRIPTOR_ADDDESCRIPTOR=env->GetMethodID(CLASS_LAYERDESCRIPTOR, "addDescriptor", "(Lmapnik/AttributeDescriptor;)V");
+
+	// AttributeDescriptor
+	CLASS_ATTRIBUTEDESCRIPTOR=(jclass)env->NewGlobalRef(env->FindClass("mapnik/AttributeDescriptor"));
+	CTOR_ATTRIBUTEDESCRIPTOR=env->GetMethodID(CLASS_ATTRIBUTEDESCRIPTOR, "<init>", "()V");
+	FIELD_ATTRIBUTEDESCRIPTOR_NAME=env->GetFieldID(CLASS_ATTRIBUTEDESCRIPTOR, "name", "Ljava/lang/String;");
+	FIELD_ATTRIBUTEDESCRIPTOR_TYPE=env->GetFieldID(CLASS_ATTRIBUTEDESCRIPTOR, "type", "I");
+	FIELD_ATTRIBUTEDESCRIPTOR_PRIMARYKEY=env->GetFieldID(CLASS_ATTRIBUTEDESCRIPTOR, "primaryKey", "Z");
+	FIELD_ATTRIBUTEDESCRIPTOR_SIZE=env->GetFieldID(CLASS_ATTRIBUTEDESCRIPTOR, "size", "I");
+	FIELD_ATTRIBUTEDESCRIPTOR_PRECISION=env->GetFieldID(CLASS_ATTRIBUTEDESCRIPTOR, "precision", "I");
 
 	return true;
 }
@@ -1270,6 +1306,96 @@ JNIEXPORT jobject JNICALL Java_mapnik_Datasource_getParameters
 	}
 
 	return paramobject;
+}
+
+/*
+ * Class:     mapnik_Datasource
+ * Method:    getType
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_mapnik_Datasource_getType
+  (JNIEnv *env, jobject dsobj)
+{
+	PREAMBLE;
+	mapnik::datasource_ptr* dsp=LOAD_DATASOURCE_POINTER(dsobj);
+	return (*dsp)->type();
+	TRAILER;
+}
+
+/*
+ * Class:     mapnik_Datasource
+ * Method:    bind
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Datasource_bind
+  (JNIEnv *env, jobject dsobj)
+{
+	PREAMBLE;
+	mapnik::datasource_ptr* dsp=LOAD_DATASOURCE_POINTER(dsobj);
+	(*dsp)->bind();
+	TRAILER;
+}
+
+/*
+ * Class:     mapnik_Datasource
+ * Method:    getEnvelope
+ * Signature: ()Lmapnik/Box2d;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_Datasource_getEnvelope
+  (JNIEnv *env, jobject dsobj)
+{
+	PREAMBLE;
+	mapnik::datasource_ptr* dsp=LOAD_DATASOURCE_POINTER(dsobj);
+	return box2dFromNative(env, (*dsp)->envelope());
+	TRAILER;
+}
+
+/*
+ * Class:     mapnik_Datasource
+ * Method:    features
+ * Signature: (Lmapnik/Query;)Lmapnik/FeatureSet;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_Datasource_features
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     mapnik_Datasource
+ * Method:    featuresAtPoint
+ * Signature: (Lmapnik/Coord;)Lmapnik/FeatureSet;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_Datasource_featuresAtPoint
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     mapnik_Datasource
+ * Method:    getDescriptor
+ * Signature: ()Lmapnik/LayerDescriptor;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_Datasource_getDescriptor
+  (JNIEnv *env, jobject dsobj)
+{
+	PREAMBLE;
+	mapnik::datasource_ptr* dsp=LOAD_DATASOURCE_POINTER(dsobj);
+	mapnik::layer_descriptor desc=(*dsp)->get_descriptor();
+
+	jobject ret=env->NewObject(CLASS_LAYERDESCRIPTOR, CTOR_LAYERDESCRIPTOR);
+	env->SetObjectField(ret, FIELD_LAYERDESCRIPTOR_NAME, env->NewStringUTF(desc.get_name().c_str()));
+	env->SetObjectField(ret, FIELD_LAYERDESCRIPTOR_ENCODING, env->NewStringUTF(desc.get_encoding().c_str()));
+
+	std::vector<mapnik::attribute_descriptor> &descriptors(desc.get_descriptors());
+	for (std::vector<mapnik::attribute_descriptor>::iterator iter=descriptors.begin(); iter!=descriptors.end(); iter++) {
+		jobject attr=env->NewObject(CLASS_ATTRIBUTEDESCRIPTOR, CTOR_ATTRIBUTEDESCRIPTOR);
+		env->SetObjectField(attr, FIELD_ATTRIBUTEDESCRIPTOR_NAME, env->NewStringUTF(iter->get_name().c_str()));
+		env->SetIntField(attr, FIELD_ATTRIBUTEDESCRIPTOR_TYPE, iter->get_type());
+		env->SetBooleanField(attr, FIELD_ATTRIBUTEDESCRIPTOR_PRIMARYKEY, (jboolean)iter->is_primary_key());
+		env->SetIntField(attr, FIELD_ATTRIBUTEDESCRIPTOR_SIZE, iter->get_size());
+		env->SetIntField(attr, FIELD_ATTRIBUTEDESCRIPTOR_PRECISION, iter->get_precision());
+
+		env->CallVoidMethod(ret, METHOD_LAYERDESCRIPTOR_ADDDESCRIPTOR, attr);
+	}
+
+	return ret;
+	TRAILER;
 }
 
 
