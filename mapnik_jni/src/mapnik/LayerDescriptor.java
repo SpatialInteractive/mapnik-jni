@@ -32,4 +32,15 @@ public class LayerDescriptor {
 	public void addDescriptor(AttributeDescriptor desc) {
 		descriptors.add(desc);
 	}
+	
+	@Override
+	public String toString() {
+		StringBuilder sb=new StringBuilder();
+		sb.append("LayerDescriptor(").append(name).append(",").append(encoding).append(",\n");
+		for (AttributeDescriptor ad: descriptors) {
+			sb.append("\t").append(ad.toString()).append("\n");
+		}
+		sb.append(")");
+		return sb.toString();
+	}
 }

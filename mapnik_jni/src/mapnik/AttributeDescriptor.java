@@ -29,4 +29,16 @@ public class AttributeDescriptor {
 	public int getPrecision() {
 		return precision;
 	}
+	
+	@Override
+	public String toString() {
+		StringBuilder sb=new StringBuilder();
+		sb.append("Attribute(name=").append(name);
+		sb.append(",type=").append(type);
+		sb.append(",primaryKey=").append(primaryKey);
+		sb.append(",size=").append(size);
+		sb.append(",precision=").append(precision);
+		sb.append(")");
+		return sb.toString();
+	}
 }

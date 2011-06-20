@@ -26,6 +26,8 @@ static classinfo_t
 	CLASS_FEATURESET;
 static jclass
 	CLASS_STRING,
+	CLASS_DOUBLE,
+	CLASS_INTEGER,
 	CLASS_HASHSET,
 	CLASS_PARAMETERS,
 	CLASS_BOX2D,
@@ -39,6 +41,8 @@ static jmethodID
 	METHOD_PARAMETERS_SET_INT,
 	METHOD_PARAMETERS_SET_DOUBLE,
 	METHOD_PARAMETERS_COPY_TO_NATIVE,
+	METHOD_DOUBLE_VALUEOF,
+	METHOD_INTEGER_VALUEOF,
 	CTOR_HASHSET,
 	METHOD_HASHSET_ADD,
 	CTOR_LAYERDESCRIPTOR,
@@ -65,11 +69,18 @@ static jfieldID
 	FIELD_ATTRIBUTEDESCRIPTOR_TYPE,
 	FIELD_ATTRIBUTEDESCRIPTOR_PRIMARYKEY,
 	FIELD_ATTRIBUTEDESCRIPTOR_SIZE,
-	FIELD_ATTRIBUTEDESCRIPTOR_PRECISION;
+	FIELD_ATTRIBUTEDESCRIPTOR_PRECISION,
+
+	FIELD_FEATURESET_FEATURE_PTR;
 
 
 void throw_error(JNIEnv* env, const char* msg) {
 	jclass clazz=env->FindClass("java/lang/Error");
+	env->ThrowNew(clazz, msg);
+}
+
+void throw_runtime_exception(JNIEnv* env, const char* msg) {
+	jclass clazz=env->FindClass("java/lang/RuntimeException");
 	env->ThrowNew(clazz, msg);
 }
 
@@ -90,6 +101,7 @@ void throw_java_exception(JNIEnv* env, std::exception& e) {
 #define LOAD_PROJECTION_POINTER(projobj) (static_cast<mapnik::projection*>((void*)(env->GetLongField(projobj, CLASS_PROJECTION.ptr_field))))
 #define LOAD_QUERY_POINTER(qobj) (static_cast<mapnik::query*>((void*)(env->GetLongField(qobj, CLASS_QUERY.ptr_field))))
 #define LOAD_FEATURESET_POINTER(fsobj) (static_cast<mapnik::featureset_ptr*>((void*)(env->GetLongField(fsobj, CLASS_FEATURESET.ptr_field))))
+#define LOAD_FEATURE_POINTER(fsobj) (static_cast<mapnik::feature_ptr*>((void*)(env->GetLongField(fsobj, FIELD_FEATURESET_FEATURE_PTR))))
 
 // Exception handling
 #define PREAMBLE try {
@@ -134,8 +146,19 @@ static bool init_ids(JNIEnv* env) {
 		return false;
 	}
 
+	// FeatureSet
+	FIELD_FEATURESET_FEATURE_PTR=env->GetFieldID(CLASS_FEATURESET.java_class, "feature_ptr", "J");
+
 	// String
 	CLASS_STRING=(jclass)env->NewGlobalRef(env->FindClass("java/lang/String"));
+
+	// Integer
+	CLASS_INTEGER=(jclass)env->NewGlobalRef(env->FindClass("java/lang/Integer"));
+	METHOD_INTEGER_VALUEOF=env->GetStaticMethodID(CLASS_INTEGER, "valueOf", "(I)Ljava/lang/Integer;");
+
+	// Double
+	CLASS_DOUBLE=(jclass)env->NewGlobalRef(env->FindClass("java/lang/Double"));
+	METHOD_DOUBLE_VALUEOF=env->GetStaticMethodID(CLASS_DOUBLE, "valueOf", "(D)Ljava/lang/Double;");
 
 	// Parameters
 	CLASS_PARAMETERS=(jclass)env->NewGlobalRef(env->FindClass("mapnik/Parameters"));
@@ -1375,6 +1398,8 @@ JNIEXPORT jobject JNICALL Java_mapnik_Datasource_features
 
 	jobject ret=env->AllocObject(CLASS_FEATURESET.java_class);
 	env->SetLongField(ret, CLASS_FEATURESET.ptr_field, FROM_POINTER(fspinned));
+	env->SetLongField(ret, FIELD_FEATURESET_FEATURE_PTR, 0l);
+	return ret;
 
 	TRAILER;
 }
@@ -1401,6 +1426,7 @@ JNIEXPORT jobject JNICALL Java_mapnik_Datasource_featuresAtPoint
 
 	jobject ret=env->AllocObject(CLASS_FEATURESET.java_class);
 	env->SetLongField(ret, CLASS_FEATURESET.ptr_field, FROM_POINTER(fspinned));
+	return ret;
 
 	TRAILER;
 }
@@ -1612,6 +1638,249 @@ JNIEXPORT void JNICALL Java_mapnik_Projection_inverse
 	prj->inverse(x, y);
 	env->SetDoubleField(coord, FIELD_COORD_X, x);
 	env->SetDoubleField(coord, FIELD_COORD_Y, y);
+}
+
+/// -- Query class
+/*
+ * Class:     mapnik_Query
+ * Method:    alloc
+ * Signature: (Lmapnik/Box2d;DDD)J
+ */
+JNIEXPORT jlong JNICALL Java_mapnik_Query_alloc
+  (JNIEnv *env, jclass c, jobject bboxj, jdouble resx, jdouble resy, jdouble scale_denominator)
+{
+	PREAMBLE;
+	mapnik::box2d<double> bbox(box2dToNative(env, bboxj));
+	mapnik::query* q=new mapnik::query(bbox, mapnik::query::resolution_type(resx, resy), scale_denominator);
+
+	return FROM_POINTER(q);
+	TRAILER;
+}
+
+/*
+ * Class:     mapnik_Query
+ * Method:    dealloc
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Query_dealloc
+  (JNIEnv *env, jclass c, jlong ptr)
+{
+	delete static_cast<mapnik::query*>(TO_POINTER(ptr));
+}
+
+/*
+ * Class:     mapnik_Query
+ * Method:    addPropertyName
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Query_addPropertyName
+  (JNIEnv *env, jobject qobj, jstring namej)
+{
+	PREAMBLE;
+	mapnik::query* q=LOAD_QUERY_POINTER(qobj);
+	refjavastring name(env, namej);
+	q->add_property_name(name.stringz);
+	TRAILER;
+}
+
+
+/// -- FeatureSet class
+/*
+ * Class:     mapnik_FeatureSet
+ * Method:    dealloc
+ * Signature: (JJ)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_FeatureSet_dealloc
+  (JNIEnv *env, jclass c, jlong fsptr, jlong fptr)
+{
+	if (fsptr)
+		delete static_cast<mapnik::featureset_ptr*>(TO_POINTER(fsptr));
+	if (fptr)
+		delete static_cast<mapnik::feature_ptr*>(TO_POINTER(fptr));
+}
+
+/*
+ * Class:     mapnik_FeatureSet
+ * Method:    next
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_mapnik_FeatureSet_next
+  (JNIEnv *env, jobject fsobj)
+{
+	PREAMBLE;
+	mapnik::featureset_ptr* fsp=LOAD_FEATURESET_POINTER(fsobj);
+	mapnik::feature_ptr* fp=LOAD_FEATURE_POINTER(fsobj);
+	if (fp) delete fp;
+
+	mapnik::feature_ptr next=(*fsp)->next();
+	if (!next) {
+		// End
+		env->SetLongField(fsobj, FIELD_FEATURESET_FEATURE_PTR, 0);
+		return false;
+	} else {
+		// Another
+		fp=new mapnik::feature_ptr(next);
+		env->SetLongField(fsobj, FIELD_FEATURESET_FEATURE_PTR, FROM_POINTER(fp));
+		return true;
+	}
+
+	TRAILER;
+}
+
+/*
+ * Class:     mapnik_FeatureSet
+ * Method:    getId
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_mapnik_FeatureSet_getId
+  (JNIEnv *env, jobject fsobj)
+{
+	PREAMBLE;
+	mapnik::feature_ptr* fp=LOAD_FEATURE_POINTER(fsobj);
+	if (!fp) {
+		throw_runtime_exception(env, "No feature loaded");
+		return 0;
+	}
+
+	return (*fp)->id();
+	TRAILER;
+}
+
+/*
+ * Class:     mapnik_FeatureSet
+ * Method:    getEnvelope
+ * Signature: ()Lmapnik/Box2d;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_FeatureSet_getEnvelope
+(JNIEnv *env, jobject fsobj)
+{
+	PREAMBLE;
+	mapnik::feature_ptr* fp=LOAD_FEATURE_POINTER(fsobj);
+	if (!fp) {
+		throw_runtime_exception(env, "No feature loaded");
+		return 0;
+	}
+
+	return box2dFromNative(env, (*fp)->envelope());
+	TRAILER;
+}
+
+/*
+ * Class:     mapnik_FeatureSet
+ * Method:    getGeometryCount
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_mapnik_FeatureSet_getGeometryCount
+(JNIEnv *env, jobject fsobj)
+{
+	PREAMBLE;
+	mapnik::feature_ptr* fp=LOAD_FEATURE_POINTER(fsobj);
+	if (!fp) {
+		throw_runtime_exception(env, "No feature loaded");
+		return 0;
+	}
+
+	return (*fp)->num_geometries();
+	TRAILER;
+}
+
+/*
+ * Class:     mapnik_FeatureSet
+ * Method:    getGeometry
+ * Signature: (I)Lmapnik/GeometryType;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_FeatureSet_getGeometry
+(JNIEnv *env, jobject fsobj, jint index)
+{
+	PREAMBLE;
+	mapnik::feature_ptr* fp=LOAD_FEATURE_POINTER(fsobj);
+	if (!fp) {
+		throw_runtime_exception(env, "No feature loaded");
+		return 0;
+	}
+
+	if (index<0 || index>=(*fp)->num_geometries()) return 0;
+
+	// TODO: geometry
+	return 0;
+	TRAILER;
+}
+
+/*
+ * Class:     mapnik_FeatureSet
+ * Method:    getPropertyNames
+ * Signature: ()Ljava/util/Set;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_FeatureSet_getPropertyNames
+(JNIEnv *env, jobject fsobj)
+{
+	PREAMBLE;
+	mapnik::feature_ptr* fp=LOAD_FEATURE_POINTER(fsobj);
+	if (!fp) {
+		throw_runtime_exception(env, "No feature loaded");
+		return 0;
+	}
+
+	jobject ret=env->NewObject(CLASS_HASHSET, CTOR_HASHSET);
+	for (std::map<std::string,mapnik::value>::iterator iter=(*fp)->begin(); iter!=(*fp)->end(); iter++) {
+		std::string const& name(iter->first);
+		env->CallBooleanMethod(ret, METHOD_HASHSET_ADD, env->NewStringUTF(name.c_str()));
+	}
+
+	return ret;
+	TRAILER;
+}
+
+class value_to_java: public boost::static_visitor<jobject> {
+	JNIEnv* env;
+public:
+	value_to_java(JNIEnv* aenv): env(aenv) {
+	}
+
+	jobject operator()(int value) const {
+		return env->CallStaticObjectMethod(CLASS_INTEGER, METHOD_INTEGER_VALUEOF, value);
+	}
+
+	jobject operator()(double value) const {
+		return env->CallStaticObjectMethod(CLASS_DOUBLE, METHOD_DOUBLE_VALUEOF, value);
+	}
+
+	jobject operator()(std::string const& value) const {
+		return env->NewStringUTF(value.c_str());
+	}
+
+	jobject operator()(icu::UnicodeString const& value) const {
+		return env->NewString(value.getBuffer(), value.length());
+	}
+
+	jobject operator()(mapnik::value_null const& value) const {
+		return 0;
+	}
+};
+
+/*
+ * Class:     mapnik_FeatureSet
+ * Method:    getProperty
+ * Signature: (Ljava/lang/String;)Ljava/lang/Object;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_FeatureSet_getProperty
+  (JNIEnv *env, jobject fsobj, jstring namej)
+{
+	PREAMBLE;
+	mapnik::feature_ptr* fp=LOAD_FEATURE_POINTER(fsobj);
+	if (!fp) {
+		throw_runtime_exception(env, "No feature loaded");
+		return 0;
+	}
+
+	refjavastring name(env,namej);
+	std::map<std::string,mapnik::value>::iterator iter=(*fp)->props().find(name.stringz);
+	if (iter==(*fp)->end()) return 0;
+
+	// Convert the value
+	mapnik::value_base const& value=iter->second.base();
+	return boost::apply_visitor(value_to_java(env), value);
+	TRAILER;
 }
 
 

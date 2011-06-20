@@ -2,6 +2,12 @@ package mapnik;
 
 public class Projection {
 	public static final String LATLNG_PARAMS="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs";
+	
+	/**
+	 * Spherical web mercator
+	 */
+	public static final String SRS900913_PARAMS="+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs +over";
+	
 	private long ptr;
 	
 	private static native long alloc(String params);
@@ -33,4 +39,31 @@ public class Projection {
 	
 	public native void forward(Coord coord);
 	public native void inverse(Coord coord);
+	
+	public void forward(Box2d box) {
+		Coord c=new Coord(box.minx, box.miny);
+		forward(c);
+		box.minx=c.x;
+		box.miny=c.y;
+		
+		c.x=box.maxx;
+		c.y=box.maxy;
+		forward(c);
+		box.maxx=c.x;
+		box.maxy=c.y;
+	}
+	
+	public void inverse(Box2d box) {
+		Coord c=new Coord(box.minx, box.miny);
+		inverse(c);
+		box.minx=c.x;
+		box.miny=c.y;
+		
+		c.x=box.maxx;
+		c.y=box.maxy;
+		inverse(c);
+		box.maxx=c.x;
+		box.maxy=c.y;
+	}
+
 }

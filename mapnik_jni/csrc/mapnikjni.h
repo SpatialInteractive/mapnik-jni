@@ -860,3 +860,78 @@ JNIEXPORT void JNICALL Java_mapnik_Query_addPropertyName
 }
 #endif
 #endif
+/* Header for class mapnik_FeatureSet */
+
+#ifndef _Included_mapnik_FeatureSet
+#define _Included_mapnik_FeatureSet
+#ifdef __cplusplus
+extern "C" {
+#endif
+/*
+ * Class:     mapnik_FeatureSet
+ * Method:    dealloc
+ * Signature: (JJ)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_FeatureSet_dealloc
+  (JNIEnv *, jclass, jlong, jlong);
+
+/*
+ * Class:     mapnik_FeatureSet
+ * Method:    next
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_mapnik_FeatureSet_next
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     mapnik_FeatureSet
+ * Method:    getId
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_mapnik_FeatureSet_getId
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     mapnik_FeatureSet
+ * Method:    getEnvelope
+ * Signature: ()Lmapnik/Box2d;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_FeatureSet_getEnvelope
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     mapnik_FeatureSet
+ * Method:    getGeometryCount
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_mapnik_FeatureSet_getGeometryCount
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     mapnik_FeatureSet
+ * Method:    getGeometry
+ * Signature: (I)Lmapnik/GeometryType;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_FeatureSet_getGeometry
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     mapnik_FeatureSet
+ * Method:    getPropertyNames
+ * Signature: ()Ljava/util/Set;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_FeatureSet_getPropertyNames
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     mapnik_FeatureSet
+ * Method:    getProperty
+ * Signature: (Ljava/lang/String;)Ljava/lang/Object;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_FeatureSet_getProperty
+  (JNIEnv *, jobject, jstring);
+
+#ifdef __cplusplus
+}
+#endif
+#endif
