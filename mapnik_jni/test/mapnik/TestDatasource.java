@@ -82,6 +82,17 @@ public class TestDatasource {
 				if (value==null) continue;
 				sb.append(" ").append(name).append("=").append(value);
 			}
+			for (int i=0; i<fs.getGeometryCount(); i++) {
+				sb.append("\n\t");
+				System.out.println("Getting geometry");
+				Geometry g=fs.getGeometry(i);
+				System.out.println("Got geometry");
+				if (g!=null) {
+					System.out.println("Appending geometry");
+					sb.append(g.toString());
+					System.out.println("Done with geometry");
+				}
+			}
 			
 			System.out.println(sb.toString());
 		}

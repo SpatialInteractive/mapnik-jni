@@ -23,7 +23,8 @@ static classinfo_t
 	CLASS_FEATURE_TYPE_STYLE,
 	CLASS_PROJECTION,
 	CLASS_QUERY,
-	CLASS_FEATURESET;
+	CLASS_FEATURESET,
+	CLASS_GEOMETRY;
 static jclass
 	CLASS_STRING,
 	CLASS_DOUBLE,
@@ -71,7 +72,8 @@ static jfieldID
 	FIELD_ATTRIBUTEDESCRIPTOR_SIZE,
 	FIELD_ATTRIBUTEDESCRIPTOR_PRECISION,
 
-	FIELD_FEATURESET_FEATURE_PTR;
+	FIELD_FEATURESET_FEATURE_PTR,
+	FIELD_GEOMETRY_FEATURE_PTR;
 
 
 void throw_error(JNIEnv* env, const char* msg) {
@@ -102,6 +104,7 @@ void throw_java_exception(JNIEnv* env, std::exception& e) {
 #define LOAD_QUERY_POINTER(qobj) (static_cast<mapnik::query*>((void*)(env->GetLongField(qobj, CLASS_QUERY.ptr_field))))
 #define LOAD_FEATURESET_POINTER(fsobj) (static_cast<mapnik::featureset_ptr*>((void*)(env->GetLongField(fsobj, CLASS_FEATURESET.ptr_field))))
 #define LOAD_FEATURE_POINTER(fsobj) (static_cast<mapnik::feature_ptr*>((void*)(env->GetLongField(fsobj, FIELD_FEATURESET_FEATURE_PTR))))
+#define LOAD_GEOMETRY_POINTER(gobj) (static_cast<mapnik::geometry_type*>((void*)(env->GetLongField(gobj, CLASS_GEOMETRY.ptr_field))))
 
 // Exception handling
 #define PREAMBLE try {
@@ -140,7 +143,8 @@ static bool init_ids(JNIEnv* env) {
 		init_class(env, "mapnik/FeatureTypeStyle", CLASS_FEATURE_TYPE_STYLE, false) &&
 		init_class(env, "mapnik/Projection", CLASS_PROJECTION, false) &&
 		init_class(env, "mapnik/Query", CLASS_QUERY, false) &&
-		init_class(env, "mapnik/FeatureSet", CLASS_FEATURESET, false)
+		init_class(env, "mapnik/FeatureSet", CLASS_FEATURESET, false) &&
+		init_class(env, "mapnik/Geometry", CLASS_GEOMETRY, false)
 		)) {
 		throw_error(env, "Error initializing native references");
 		return false;
@@ -207,6 +211,9 @@ static bool init_ids(JNIEnv* env) {
 	FIELD_ATTRIBUTEDESCRIPTOR_PRIMARYKEY=env->GetFieldID(CLASS_ATTRIBUTEDESCRIPTOR, "primaryKey", "Z");
 	FIELD_ATTRIBUTEDESCRIPTOR_SIZE=env->GetFieldID(CLASS_ATTRIBUTEDESCRIPTOR, "size", "I");
 	FIELD_ATTRIBUTEDESCRIPTOR_PRECISION=env->GetFieldID(CLASS_ATTRIBUTEDESCRIPTOR, "precision", "I");
+
+	// Geometry
+	FIELD_GEOMETRY_FEATURE_PTR=env->GetFieldID(CLASS_GEOMETRY.java_class, "feature_ptr", "J");
 
 	return true;
 }
@@ -1801,8 +1808,13 @@ JNIEXPORT jobject JNICALL Java_mapnik_FeatureSet_getGeometry
 
 	if (index<0 || index>=(*fp)->num_geometries()) return 0;
 
-	// TODO: geometry
-	return 0;
+	mapnik::geometry_type &g((*fp)->get_geometry(index));
+	jobject ret=env->AllocObject(CLASS_GEOMETRY.java_class);
+	env->SetLongField(ret, CLASS_GEOMETRY.ptr_field, FROM_POINTER(&g));
+	env->SetLongField(ret, FIELD_GEOMETRY_FEATURE_PTR, FROM_POINTER(
+		new mapnik::feature_ptr(*fp)
+		));
+	return ret;
 	TRAILER;
 }
 
@@ -1880,6 +1892,85 @@ JNIEXPORT jobject JNICALL Java_mapnik_FeatureSet_getProperty
 	// Convert the value
 	mapnik::value_base const& value=iter->second.base();
 	return boost::apply_visitor(value_to_java(env), value);
+	TRAILER;
+}
+
+/// -- Geometry class
+/*
+ * Class:     mapnik_Geometry
+ * Method:    dealloc
+ * Signature: (JJ)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Geometry_dealloc
+  (JNIEnv *env, jclass c, jlong ptr, jlong feature_ptr)
+{
+	// We don't own ptr, just feature_ptr
+	if (feature_ptr) {
+		delete static_cast<mapnik::feature_ptr*>(TO_POINTER(feature_ptr));
+	}
+}
+
+/*
+ * Class:     mapnik_Geometry
+ * Method:    getType
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_mapnik_Geometry_getType
+  (JNIEnv *env, jobject gobj)
+{
+	PREAMBLE;
+	mapnik::geometry_type* g=LOAD_GEOMETRY_POINTER(gobj);
+	return g->type();
+	TRAILER;
+}
+
+/*
+ * Class:     mapnik_Geometry
+ * Method:    getNumPoints
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_mapnik_Geometry_getNumPoints
+  (JNIEnv *env, jobject gobj)
+{
+	PREAMBLE;
+	mapnik::geometry_type* g=LOAD_GEOMETRY_POINTER(gobj);
+	return g->num_points();
+	TRAILER;
+}
+
+/*
+ * Class:     mapnik_Geometry
+ * Method:    getVertex
+ * Signature: (ILmapnik/Coord;)I
+ */
+JNIEXPORT jint JNICALL Java_mapnik_Geometry_getVertex
+  (JNIEnv *env, jobject gobj, jint pos, jobject coord)
+{
+	PREAMBLE;
+	mapnik::geometry_type* g=LOAD_GEOMETRY_POINTER(gobj);
+	double x, y;
+	unsigned ret=g->get_vertex(pos, &x, &y);
+
+	if (coord) {
+		env->SetDoubleField(coord, FIELD_COORD_X, x);
+		env->SetDoubleField(coord, FIELD_COORD_Y, y);
+	}
+
+	return ret;
+	TRAILER;
+}
+
+/*
+ * Class:     mapnik_Geometry
+ * Method:    getEnvelope
+ * Signature: ()Lmapnik/Box2d;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_Geometry_getEnvelope
+  (JNIEnv *env, jobject gobj)
+{
+	PREAMBLE;
+	mapnik::geometry_type* g=LOAD_GEOMETRY_POINTER(gobj);
+	return box2dFromNative(env, g->envelope());
 	TRAILER;
 }
 

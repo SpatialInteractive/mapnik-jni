@@ -61,7 +61,7 @@ public class FeatureSet {
 	 * @param index
 	 * @return geometry
 	 */
-	public native GeometryType getGeometry(int index);
+	public native Geometry getGeometry(int index);
 	
 	/**
 	 * Names of all properties

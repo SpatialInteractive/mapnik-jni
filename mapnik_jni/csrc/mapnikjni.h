@@ -910,7 +910,7 @@ JNIEXPORT jint JNICALL Java_mapnik_FeatureSet_getGeometryCount
 /*
  * Class:     mapnik_FeatureSet
  * Method:    getGeometry
- * Signature: (I)Lmapnik/GeometryType;
+ * Signature: (I)Lmapnik/Geometry;
  */
 JNIEXPORT jobject JNICALL Java_mapnik_FeatureSet_getGeometry
   (JNIEnv *, jobject, jint);
@@ -930,6 +930,69 @@ JNIEXPORT jobject JNICALL Java_mapnik_FeatureSet_getPropertyNames
  */
 JNIEXPORT jobject JNICALL Java_mapnik_FeatureSet_getProperty
   (JNIEnv *, jobject, jstring);
+
+#ifdef __cplusplus
+}
+#endif
+#endif
+/* Header for class mapnik_Geometry */
+
+#ifndef _Included_mapnik_Geometry
+#define _Included_mapnik_Geometry
+#ifdef __cplusplus
+extern "C" {
+#endif
+#undef mapnik_Geometry_TYPE_POINT
+#define mapnik_Geometry_TYPE_POINT 1L
+#undef mapnik_Geometry_TYPE_LINESTRING
+#define mapnik_Geometry_TYPE_LINESTRING 2L
+#undef mapnik_Geometry_TYPE_POLYGON
+#define mapnik_Geometry_TYPE_POLYGON 3L
+#undef mapnik_Geometry_TYPE_MULTIPOINT
+#define mapnik_Geometry_TYPE_MULTIPOINT 4L
+#undef mapnik_Geometry_TYPE_MULTILINESTRING
+#define mapnik_Geometry_TYPE_MULTILINESTRING 5L
+#undef mapnik_Geometry_TYPE_MULTIPOLYGON
+#define mapnik_Geometry_TYPE_MULTIPOLYGON 6L
+/*
+ * Class:     mapnik_Geometry
+ * Method:    dealloc
+ * Signature: (JJ)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Geometry_dealloc
+  (JNIEnv *, jclass, jlong, jlong);
+
+/*
+ * Class:     mapnik_Geometry
+ * Method:    getType
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_mapnik_Geometry_getType
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     mapnik_Geometry
+ * Method:    getNumPoints
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_mapnik_Geometry_getNumPoints
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     mapnik_Geometry
+ * Method:    getVertex
+ * Signature: (ILmapnik/Coord;)I
+ */
+JNIEXPORT jint JNICALL Java_mapnik_Geometry_getVertex
+  (JNIEnv *, jobject, jint, jobject);
+
+/*
+ * Class:     mapnik_Geometry
+ * Method:    getEnvelope
+ * Signature: ()Lmapnik/Box2d;
+ */
+JNIEXPORT jobject JNICALL Java_mapnik_Geometry_getEnvelope
+  (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }
