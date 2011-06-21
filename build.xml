@@ -1,12 +1,47 @@
-<project name="mapnik_jni" default="jar">
+<project name="mapnik_jni" default="all">
 	<target name="compile">
 		<mkdir dir="build/classes"/>
 		<mkdir dir="csrc"/>
 		<javac srcdir="src" destdir="build/classes" debug="on" source="1.5" target="1.5" includeantruntime="false"/>
+	</target>
+	
+	<target name="headers" depends="compile">
 		<javah class="mapnik.Parameters,mapnik.Mapnik,mapnik.Map,mapnik.Layer,mapnik.FeatureTypeStyle,mapnik.Datasource,mapnik.DatasourceCache,mapnik.Projection,mapnik.Query,mapnik.FeatureSet,mapnik.Geometry" outputfile="csrc/mapnikjni.h" classpath="build/classes"/>
 	</target>
 	
 	<target name="jar" depends="compile">
-		<jar jarfile="build/mapnik_jni.jar" basedir="build/classes"/>
+		<mkdir dir="build/dist"/>
+		<jar jarfile="build/dist/mapnik-jni.jar" basedir="build/classes"/>
 	</target>
+	
+	<target name="clean">
+		<delete dir="build"/>
+		<delete dir="csrc">
+			<include name="*.jnilib"/>
+			<include name="*.so"/>
+			<include name="*.dll"/>
+		</delete>
+	</target>
+	
+	<target name="native-init">
+		<condition property="platform.osx">
+			<os family="mac"/>
+		</condition>
+	</target>
+	<target name="native-osx" if="platform.osx">
+		<exec dir="csrc" executable="make" failonerror="true">
+			<arg value="-f"/>
+			<arg value="Makefile.osx"/>
+		</exec>
+		<mkdir dir="build/dist"/>
+		<copy todir="build/dist">
+			<fileset dir="csrc">
+				<include name="*.jnilib"/>
+			</fileset>
+		</copy>
+	</target>
+	<target name="native" depends="native-init,native-osx"/>
+	
+	<target name="all" depends="jar,native"/>
+	<target name="dist" depends="clean,all"/>
 </project>

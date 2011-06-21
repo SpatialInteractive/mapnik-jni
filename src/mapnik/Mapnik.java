@@ -8,7 +8,7 @@ public class Mapnik {
 	public synchronized static void initialize() {
 		if (initialized) return;
 		try {
-			System.loadLibrary("mapnik_jni");
+			System.loadLibrary("mapnik-jni");
 		} finally {
 			nativeInit();
 			initialized=true;
