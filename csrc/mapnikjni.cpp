@@ -1474,6 +1474,41 @@ JNIEXPORT jobject JNICALL Java_mapnik_Datasource_getDescriptor
 //// -- DatasourceCache
 /*
  * Class:     mapnik_DatasourceCache
+ * Method:    pluginNames
+ * Signature: ()[Ljava/lang/String;
+ */
+JNIEXPORT jobjectArray JNICALL Java_mapnik_DatasourceCache_pluginNames
+  (JNIEnv *env, jclass c)
+{
+	std::vector<std::string> names(mapnik::datasource_cache::plugin_names());
+	jobjectArray ary=env->NewObjectArray(
+		names.size(),
+		CLASS_STRING,
+		(jobject)0
+		);
+	
+	for (unsigned i=0; i<names.size(); i++) {
+		env->SetObjectArrayElement(ary, i,
+			env->NewStringUTF(names[i].c_str()));
+	}
+	
+	return ary;
+}
+
+/*
+ * Class:     mapnik_DatasourceCache
+ * Method:    pluginDirectories
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_mapnik_DatasourceCache_pluginDirectories
+  (JNIEnv *env, jclass c)
+{
+	std::string s(mapnik::datasource_cache::plugin_directories());
+	return env->NewStringUTF(s.c_str());
+}
+
+/*
+ * Class:     mapnik_DatasourceCache
  * Method:    registerDatasources
  * Signature: (Ljava/lang/String;)V
  */

@@ -7,8 +7,7 @@ import static org.junit.Assert.*;
 public class TestLayer {
 	@BeforeClass
 	public static void initMapnik() {
-		Mapnik.initialize();
-		DatasourceCache.registerDatasources("/usr/local/lib/mapnik2/input");
+		TestBase.initialize();
 	}
 
 	@Test

@@ -8,6 +8,13 @@ public class TestBase {
 		if (inited) return;
 		inited=true;
 		Mapnik.initialize();
-		DatasourceCache.registerDatasources("/usr/local/lib/mapnik2/input");
+		
+		System.out.println("Plugin directories=" + DatasourceCache.pluginDirectories());
+		try {
+			DatasourceCache.registerDatasources("/usr/local/lib/mapnik2/input");
+		} catch (Throwable t) { }
+		for (String s: DatasourceCache.pluginNames()) {
+			System.out.println("Plugin=" + s);
+		}
 	}
 }

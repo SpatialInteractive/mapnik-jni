@@ -50,7 +50,6 @@ JNIEXPORT void JNICALL Java_mapnik_Parameters_setNativeDouble
 #ifdef __cplusplus
 extern "C" {
 #endif
-/* Inaccessible static: initialized */
 /*
  * Class:     mapnik_Mapnik
  * Method:    nativeInit
@@ -746,6 +745,22 @@ JNIEXPORT jobject JNICALL Java_mapnik_Datasource_getDescriptor
 #ifdef __cplusplus
 extern "C" {
 #endif
+/*
+ * Class:     mapnik_DatasourceCache
+ * Method:    pluginNames
+ * Signature: ()[Ljava/lang/String;
+ */
+JNIEXPORT jobjectArray JNICALL Java_mapnik_DatasourceCache_pluginNames
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     mapnik_DatasourceCache
+ * Method:    pluginDirectories
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_mapnik_DatasourceCache_pluginDirectories
+  (JNIEnv *, jclass);
+
 /*
  * Class:     mapnik_DatasourceCache
  * Method:    registerDatasources
