@@ -1,0 +1,21 @@
+include common.mk
+
+JAVA_CMD ?= java
+CFLAGS ?= -O3
+FREETYPE_CFLAGS ?= $(shell freetype-config --cflags)
+JAVA_CFLAGS ?= $(shell $(JAVA_CMD) -jar java-config.jar --cflags)
+
+
+libmapnik-jni.jnilib: mapnikjni.cpp mapnikjni.h
+	g++ -o libmapnik-jni.so \
+		-fPIC -shared \
+		$(CFLAGS) \
+		$(FREETYPE_CFLAGS) \
+		$(JAVA_CFLAGS) \
+		mapnikjni.cpp \
+		$(LDFLAGS) \
+		-lmapnik2
+	
+clean:
+	rm libmapnik-jni.so
+	

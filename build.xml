@@ -24,23 +24,27 @@
 	</target>
 	
 	<target name="native-init">
-		<condition property="platform.osx">
+		<condition property="platform.makefile" value="Makefile.osx">
 			<os family="mac"/>
 		</condition>
+		<condition property="platform.makefile" value="Makefile.linux">
+			<os family="unix" name="linux"/>
+		</condition>
 	</target>
-	<target name="native-osx" if="platform.osx">
+	<target name="native-build" if="platform.makefile">
 		<exec dir="csrc" executable="make" failonerror="true">
 			<arg value="-f"/>
-			<arg value="Makefile.osx"/>
+			<arg value="${platform.makefile}"/>
 		</exec>
 		<mkdir dir="build/dist"/>
 		<copy todir="build/dist">
 			<fileset dir="csrc">
 				<include name="*.jnilib"/>
+				<include name="*.so"/>
 			</fileset>
 		</copy>
 	</target>
-	<target name="native" depends="native-init,native-osx"/>
+	<target name="native" depends="native-init,native-build"/>
 	
 	<target name="all" depends="jar,native"/>
 	<target name="dist" depends="clean,all"/>
