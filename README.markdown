@@ -23,3 +23,8 @@ The following classes have been more or less implemented on the Java side:
 
 Once I get this a little further along, I need to talk to the mapnik list about this.  It really would do better as part of the core mapnik project.  Also, if it were part of the main mapnik shared library it would add negligible code size as compared to building it standalone.  If anyone runs across this and wishes to talk to the list about it before I get a chance, feel free.
 
+Building
+--------
+Assuming that mapnik2 (aka mapnik trunk) has been installed in a default location (ie. /usr/local), just running "ant" from the root should work on either Linux or OSX.  Your jar and shared library will be deposited into build/dist.
+
+
