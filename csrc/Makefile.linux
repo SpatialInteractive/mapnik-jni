@@ -6,7 +6,7 @@ FREETYPE_CFLAGS ?= $(shell freetype-config --cflags)
 JAVA_CFLAGS ?= $(shell $(JAVA_CMD) -jar java-config.jar --cflags)
 
 
-libmapnik-jni.jnilib: mapnikjni.cpp mapnikjni.h
+libmapnik-jni.so: mapnikjni.cpp mapnikjni.h
 	g++ -o libmapnik-jni.so \
 		-fPIC -shared \
 		$(CFLAGS) \
