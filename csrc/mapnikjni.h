@@ -892,10 +892,18 @@ JNIEXPORT void JNICALL Java_mapnik_FeatureSet_dealloc
 
 /*
  * Class:     mapnik_FeatureSet
- * Method:    next
+ * Method:    _next
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_mapnik_FeatureSet_next
+JNIEXPORT jboolean JNICALL Java_mapnik_FeatureSet__1next
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     mapnik_FeatureSet
+ * Method:    _loadGeometries
+ * Signature: ()[Lmapnik/Geometry;
+ */
+JNIEXPORT jobjectArray JNICALL Java_mapnik_FeatureSet__1loadGeometries
   (JNIEnv *, jobject);
 
 /*
@@ -913,22 +921,6 @@ JNIEXPORT jint JNICALL Java_mapnik_FeatureSet_getId
  */
 JNIEXPORT jobject JNICALL Java_mapnik_FeatureSet_getEnvelope
   (JNIEnv *, jobject);
-
-/*
- * Class:     mapnik_FeatureSet
- * Method:    getGeometryCount
- * Signature: ()I
- */
-JNIEXPORT jint JNICALL Java_mapnik_FeatureSet_getGeometryCount
-  (JNIEnv *, jobject);
-
-/*
- * Class:     mapnik_FeatureSet
- * Method:    getGeometry
- * Signature: (I)Lmapnik/Geometry;
- */
-JNIEXPORT jobject JNICALL Java_mapnik_FeatureSet_getGeometry
-  (JNIEnv *, jobject, jint);
 
 /*
  * Class:     mapnik_FeatureSet
@@ -969,14 +961,6 @@ extern "C" {
 #define mapnik_Geometry_TYPE_MULTILINESTRING 5L
 #undef mapnik_Geometry_TYPE_MULTIPOLYGON
 #define mapnik_Geometry_TYPE_MULTIPOLYGON 6L
-/*
- * Class:     mapnik_Geometry
- * Method:    dealloc
- * Signature: (JJ)V
- */
-JNIEXPORT void JNICALL Java_mapnik_Geometry_dealloc
-  (JNIEnv *, jclass, jlong, jlong);
-
 /*
  * Class:     mapnik_Geometry
  * Method:    getType

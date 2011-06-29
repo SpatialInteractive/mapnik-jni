@@ -7,24 +7,17 @@ public class Geometry {
 	private long ptr;
 	
 	/**
-	 * mapnik::feature_ptr*
-	 * Maintains backreference to owning feature
-	 * so as to avoid destruction problems
-	 */
-	private long feature_ptr;
-	
-	/**
 	 * Only ever alloc'd from native code
 	 */
 	private Geometry() {
 	}
 	
-	@Override
-	protected void finalize() throws Throwable {
-		dealloc(ptr, feature_ptr);
+	/**
+	 * Invalidate this reference
+	 */
+	void invalidate() {
+		ptr=0;
 	}
-	
-	private static native void dealloc(long ptr, long feature_ptr);
 	
 	public static final int
 		TYPE_POINT=1,

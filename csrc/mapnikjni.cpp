@@ -72,8 +72,7 @@ static jfieldID
 	FIELD_ATTRIBUTEDESCRIPTOR_SIZE,
 	FIELD_ATTRIBUTEDESCRIPTOR_PRECISION,
 
-	FIELD_FEATURESET_FEATURE_PTR,
-	FIELD_GEOMETRY_FEATURE_PTR;
+	FIELD_FEATURESET_FEATURE_PTR;
 
 
 void throw_error(JNIEnv* env, const char* msg) {
@@ -95,6 +94,13 @@ void throw_java_exception(JNIEnv* env, std::exception& e) {
 #define TO_POINTER(ptr) ((void*)ptr)
 #define FROM_POINTER(ptr) ((jlong)ptr)
 
+inline static long ASSERT_LONG_POINTER(long ptr) {
+	if (!ptr) {
+		throw std::runtime_error("Object is no longer valid");
+	}
+	return ptr;
+}
+
 // Pointer access macros
 #define LOAD_MAP_POINTER(mapobj) (static_cast<mapnik::Map*>((void*)(env->GetLongField(mapobj, CLASS_MAP.ptr_field))))
 #define LOAD_LAYER_POINTER(layerobj) (static_cast<mapnik::layer*>((void*)(env->GetLongField(layerobj, CLASS_LAYER.ptr_field))))
@@ -104,7 +110,7 @@ void throw_java_exception(JNIEnv* env, std::exception& e) {
 #define LOAD_QUERY_POINTER(qobj) (static_cast<mapnik::query*>((void*)(env->GetLongField(qobj, CLASS_QUERY.ptr_field))))
 #define LOAD_FEATURESET_POINTER(fsobj) (static_cast<mapnik::featureset_ptr*>((void*)(env->GetLongField(fsobj, CLASS_FEATURESET.ptr_field))))
 #define LOAD_FEATURE_POINTER(fsobj) (static_cast<mapnik::feature_ptr*>((void*)(env->GetLongField(fsobj, FIELD_FEATURESET_FEATURE_PTR))))
-#define LOAD_GEOMETRY_POINTER(gobj) (static_cast<mapnik::geometry_type*>((void*)(env->GetLongField(gobj, CLASS_GEOMETRY.ptr_field))))
+#define LOAD_GEOMETRY_POINTER(gobj) (static_cast<mapnik::geometry_type*>((void*)(ASSERT_LONG_POINTER(env->GetLongField(gobj, CLASS_GEOMETRY.ptr_field)))))
 
 // Exception handling
 #define PREAMBLE try {
@@ -211,9 +217,6 @@ static bool init_ids(JNIEnv* env) {
 	FIELD_ATTRIBUTEDESCRIPTOR_PRIMARYKEY=env->GetFieldID(CLASS_ATTRIBUTEDESCRIPTOR, "primaryKey", "Z");
 	FIELD_ATTRIBUTEDESCRIPTOR_SIZE=env->GetFieldID(CLASS_ATTRIBUTEDESCRIPTOR, "size", "I");
 	FIELD_ATTRIBUTEDESCRIPTOR_PRECISION=env->GetFieldID(CLASS_ATTRIBUTEDESCRIPTOR, "precision", "I");
-
-	// Geometry
-	FIELD_GEOMETRY_FEATURE_PTR=env->GetFieldID(CLASS_GEOMETRY.java_class, "feature_ptr", "J");
 
 	return true;
 }
@@ -1743,11 +1746,11 @@ JNIEXPORT void JNICALL Java_mapnik_FeatureSet_dealloc
 
 /*
  * Class:     mapnik_FeatureSet
- * Method:    next
+ * Method:    _next
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_mapnik_FeatureSet_next
-  (JNIEnv *env, jobject fsobj)
+JNIEXPORT jboolean JNICALL Java_mapnik_FeatureSet__1next
+	(JNIEnv *env, jobject fsobj)
 {
 	PREAMBLE;
 	mapnik::featureset_ptr* fsp=LOAD_FEATURESET_POINTER(fsobj);
@@ -1766,6 +1769,34 @@ JNIEXPORT jboolean JNICALL Java_mapnik_FeatureSet_next
 		return true;
 	}
 
+	TRAILER;
+}
+
+/*
+ * Class:     mapnik_FeatureSet
+ * Method:    _loadGeometries
+ * Signature: ()[Lmapnik/Geometry;
+ */
+JNIEXPORT jobjectArray JNICALL Java_mapnik_FeatureSet__1loadGeometries
+	(JNIEnv *env, jobject fsobj)
+{
+	PREAMBLE;
+	mapnik::feature_ptr* fp=LOAD_FEATURE_POINTER(fsobj);
+	if (!fp) {
+		throw_runtime_exception(env, "No feature loaded");
+		return 0;
+	}
+
+	unsigned count=(*fp)->num_geometries();
+	jobjectArray ret=env->NewObjectArray(count, CLASS_GEOMETRY.java_class, (jobject)0);
+	for (unsigned index=0; index<count; index++) {
+		mapnik::geometry_type &g((*fp)->get_geometry(index));
+		jobject gobject=env->AllocObject(CLASS_GEOMETRY.java_class);
+		env->SetLongField(gobject, CLASS_GEOMETRY.ptr_field, FROM_POINTER(&g));
+		env->SetObjectArrayElement(ret, index, gobject);
+	}
+
+	return ret;
 	TRAILER;
 }
 
@@ -1804,52 +1835,6 @@ JNIEXPORT jobject JNICALL Java_mapnik_FeatureSet_getEnvelope
 	}
 
 	return box2dFromNative(env, (*fp)->envelope());
-	TRAILER;
-}
-
-/*
- * Class:     mapnik_FeatureSet
- * Method:    getGeometryCount
- * Signature: ()I
- */
-JNIEXPORT jint JNICALL Java_mapnik_FeatureSet_getGeometryCount
-(JNIEnv *env, jobject fsobj)
-{
-	PREAMBLE;
-	mapnik::feature_ptr* fp=LOAD_FEATURE_POINTER(fsobj);
-	if (!fp) {
-		throw_runtime_exception(env, "No feature loaded");
-		return 0;
-	}
-
-	return (*fp)->num_geometries();
-	TRAILER;
-}
-
-/*
- * Class:     mapnik_FeatureSet
- * Method:    getGeometry
- * Signature: (I)Lmapnik/GeometryType;
- */
-JNIEXPORT jobject JNICALL Java_mapnik_FeatureSet_getGeometry
-(JNIEnv *env, jobject fsobj, jint index)
-{
-	PREAMBLE;
-	mapnik::feature_ptr* fp=LOAD_FEATURE_POINTER(fsobj);
-	if (!fp) {
-		throw_runtime_exception(env, "No feature loaded");
-		return 0;
-	}
-
-	if (index<0 || index>=(*fp)->num_geometries()) return 0;
-
-	mapnik::geometry_type &g((*fp)->get_geometry(index));
-	jobject ret=env->AllocObject(CLASS_GEOMETRY.java_class);
-	env->SetLongField(ret, CLASS_GEOMETRY.ptr_field, FROM_POINTER(&g));
-	env->SetLongField(ret, FIELD_GEOMETRY_FEATURE_PTR, FROM_POINTER(
-		new mapnik::feature_ptr(*fp)
-		));
-	return ret;
 	TRAILER;
 }
 
@@ -1931,20 +1916,6 @@ JNIEXPORT jobject JNICALL Java_mapnik_FeatureSet_getProperty
 }
 
 /// -- Geometry class
-/*
- * Class:     mapnik_Geometry
- * Method:    dealloc
- * Signature: (JJ)V
- */
-JNIEXPORT void JNICALL Java_mapnik_Geometry_dealloc
-  (JNIEnv *env, jclass c, jlong ptr, jlong feature_ptr)
-{
-	// We don't own ptr, just feature_ptr
-	if (feature_ptr) {
-		delete static_cast<mapnik::feature_ptr*>(TO_POINTER(feature_ptr));
-	}
-}
-
 /*
  * Class:     mapnik_Geometry
  * Method:    getType
