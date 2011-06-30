@@ -12,6 +12,7 @@ public class Map {
 	
 	private static native long alloc(int width, int height, String srs);
 	private static native long alloc();
+	private static native long copy(long ptr);
 	private static native void dealloc(long ptr);
 	
 	public Map() {
@@ -20,6 +21,10 @@ public class Map {
 	
 	public Map(int width, int height, String srs) {
 		ptr=alloc(width, height, srs);
+	}
+	
+	public Map(Map other) {
+		ptr=copy(other.ptr);
 	}
 	
 	@Override

@@ -86,6 +86,26 @@ JNIEXPORT void JNICALL Java_mapnik_Image_saveToFile
 	refjavastring filename(env, filenamej);
 	refjavastring type(env, typej);
 
-	mapnik::save_to_file<mapnik::image_data_32>(im->data(), filename.stringz, type.stringz);
+	mapnik::save_to_file(*im, filename.stringz, type.stringz);
 	TRAILER_VOID;
+}
+
+/*
+ * Class:     mapnik_Image
+ * Method:    saveToMemory
+ * Signature: (Ljava/lang/String;)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_mapnik_Image_saveToMemory
+  (JNIEnv *env, jobject imobj, jstring typej)
+{
+	PREAMBLE;
+	mapnik::image_32* im=LOAD_IMAGE_POINTER(imobj);
+	refjavastring type(env, typej);
+
+	std::string datastring=mapnik::save_to_string(*im, type.stringz);
+	jbyteArray ret=env->NewByteArray(datastring.size());
+	env->SetByteArrayRegion(ret, 0, datastring.size(), (const jbyte*)datastring.data());
+
+	return ret;
+	TRAILER(0);
 }

@@ -38,4 +38,5 @@ public class Image {
 	public native int getHeight();
 	
 	public native void saveToFile(String fileName, String type);
+	public native byte[] saveToMemory(String type);
 }

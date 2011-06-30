@@ -27,6 +27,24 @@ JNIEXPORT jlong JNICALL Java_mapnik_Map_alloc__
 
 /*
  * Class:     mapnik_Map
+ * Method:    copy
+ * Signature: (J)J
+ */
+JNIEXPORT jlong JNICALL Java_mapnik_Map_copy
+  (JNIEnv *env, jclass c, jlong otherPtr)
+{
+	if (!otherPtr) return 0;
+	PREAMBLE;
+
+	mapnik::Map* other=static_cast<mapnik::Map*>(TO_POINTER(otherPtr));
+	mapnik::Map* m=new mapnik::Map(*other);
+
+	return FROM_POINTER(m);
+	TRAILER(0);
+}
+
+/*
+ * Class:     mapnik_Map
  * Method:    dealloc
  * Signature: (J)V
  */
