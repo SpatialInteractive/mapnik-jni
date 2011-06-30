@@ -16,4 +16,5 @@ SOURCE_DEPENDS = mapnikjni.h mapnikjni.cpp globals.cpp \
 	class_featureset.cpp \
 	class_geometry.cpp \
 	class_image.cpp \
-	class_renderer.cpp
+	class_renderer.cpp \
+	class_freetypeengine.cpp

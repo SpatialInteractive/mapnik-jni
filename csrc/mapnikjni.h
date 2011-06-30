@@ -1091,3 +1091,38 @@ JNIEXPORT void JNICALL Java_mapnik_Renderer_renderAgg
 }
 #endif
 #endif
+/* Header for class mapnik_FreetypeEngine */
+
+#ifndef _Included_mapnik_FreetypeEngine
+#define _Included_mapnik_FreetypeEngine
+#ifdef __cplusplus
+extern "C" {
+#endif
+/*
+ * Class:     mapnik_FreetypeEngine
+ * Method:    registerFont
+ * Signature: (Ljava/lang/String;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_mapnik_FreetypeEngine_registerFont
+  (JNIEnv *, jclass, jstring);
+
+/*
+ * Class:     mapnik_FreetypeEngine
+ * Method:    registerFonts
+ * Signature: (Ljava/lang/String;Z)Z
+ */
+JNIEXPORT jboolean JNICALL Java_mapnik_FreetypeEngine_registerFonts
+  (JNIEnv *, jclass, jstring, jboolean);
+
+/*
+ * Class:     mapnik_FreetypeEngine
+ * Method:    isFontFile
+ * Signature: (Ljava/lang/String;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_mapnik_FreetypeEngine_isFontFile
+  (JNIEnv *, jclass, jstring);
+
+#ifdef __cplusplus
+}
+#endif
+#endif

@@ -7,6 +7,7 @@
 #include <mapnik/save_map.hpp>
 #include <mapnik/image_util.hpp>
 #include <mapnik/agg_renderer.hpp>
+#include <mapnik/font_engine_freetype.hpp>
 
 #include "mapnikjni.h"
 #include "globals.cpp"
@@ -22,7 +23,7 @@
 #include "class_geometry.cpp"
 #include "class_image.cpp"
 #include "class_renderer.cpp"
-
+#include "class_freetypeengine.cpp"
 
 /// -- Mapnik class
 /*
