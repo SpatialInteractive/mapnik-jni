@@ -1,6 +1,6 @@
 include common.mk
 
-libmapnik-jni.jnilib: mapnikjni.cpp mapnikjni.h
+libmapnik-jni.jnilib: $(SOURCE_DEPENDS)
 	$(CXX) -dynamiclib -o libmapnik-jni.jnilib \
 		$(CFLAGS) \
 		$(MAPNIK_CFLAGS) \

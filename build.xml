@@ -8,7 +8,7 @@
 	</target>
 	
 	<target name="headers" depends="compile">
-		<javah class="mapnik.Parameters,mapnik.Mapnik,mapnik.Map,mapnik.Layer,mapnik.FeatureTypeStyle,mapnik.Datasource,mapnik.DatasourceCache,mapnik.Projection,mapnik.Query,mapnik.FeatureSet,mapnik.Geometry" outputfile="csrc/mapnikjni.h" classpath="build/classes"/>
+		<javah class="mapnik.Parameters,mapnik.Mapnik,mapnik.Map,mapnik.Layer,mapnik.FeatureTypeStyle,mapnik.Datasource,mapnik.DatasourceCache,mapnik.Projection,mapnik.Query,mapnik.FeatureSet,mapnik.Geometry,mapnik.Image,mapnik.Renderer" outputfile="csrc/mapnikjni.h" classpath="build/classes"/>
 	</target>
 	
 	<target name="jar" depends="compile">

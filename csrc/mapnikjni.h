@@ -160,9 +160,9 @@ JNIEXPORT jstring JNICALL Java_mapnik_Map_getSrs
 /*
  * Class:     mapnik_Map
  * Method:    setSrs
- * Signature: (Ljava/lang/String;)Ljava/lang/String;
+ * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT jstring JNICALL Java_mapnik_Map_setSrs
+JNIEXPORT void JNICALL Java_mapnik_Map_setSrs
   (JNIEnv *, jobject, jstring);
 
 /*
@@ -396,6 +396,22 @@ JNIEXPORT jstring JNICALL Java_mapnik_Map_getBackgroundImage
  */
 JNIEXPORT void JNICALL Java_mapnik_Map_setBackgroundImage
   (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     mapnik_Map
+ * Method:    saveMapToFile
+ * Signature: (Ljava/lang/String;Z)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Map_saveMapToFile
+  (JNIEnv *, jobject, jstring, jboolean);
+
+/*
+ * Class:     mapnik_Map
+ * Method:    saveMapToBuffer
+ * Signature: (Z)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_mapnik_Map_saveMapToBuffer
+  (JNIEnv *, jobject, jboolean);
 
 #ifdef __cplusplus
 }
@@ -992,6 +1008,84 @@ JNIEXPORT jint JNICALL Java_mapnik_Geometry_getVertex
  */
 JNIEXPORT jobject JNICALL Java_mapnik_Geometry_getEnvelope
   (JNIEnv *, jobject);
+
+#ifdef __cplusplus
+}
+#endif
+#endif
+/* Header for class mapnik_Image */
+
+#ifndef _Included_mapnik_Image
+#define _Included_mapnik_Image
+#ifdef __cplusplus
+extern "C" {
+#endif
+/*
+ * Class:     mapnik_Image
+ * Method:    alloc
+ * Signature: (II)J
+ */
+JNIEXPORT jlong JNICALL Java_mapnik_Image_alloc__II
+  (JNIEnv *, jclass, jint, jint);
+
+/*
+ * Class:     mapnik_Image
+ * Method:    alloc
+ * Signature: (Lmapnik/Image;)J
+ */
+JNIEXPORT jlong JNICALL Java_mapnik_Image_alloc__Lmapnik_Image_2
+  (JNIEnv *, jclass, jobject);
+
+/*
+ * Class:     mapnik_Image
+ * Method:    dealloc
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Image_dealloc
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     mapnik_Image
+ * Method:    getWidth
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_mapnik_Image_getWidth
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     mapnik_Image
+ * Method:    getHeight
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_mapnik_Image_getHeight
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     mapnik_Image
+ * Method:    saveToFile
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Image_saveToFile
+  (JNIEnv *, jobject, jstring, jstring);
+
+#ifdef __cplusplus
+}
+#endif
+#endif
+/* Header for class mapnik_Renderer */
+
+#ifndef _Included_mapnik_Renderer
+#define _Included_mapnik_Renderer
+#ifdef __cplusplus
+extern "C" {
+#endif
+/*
+ * Class:     mapnik_Renderer
+ * Method:    renderAgg
+ * Signature: (Lmapnik/Map;Lmapnik/Image;)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_Renderer_renderAgg
+  (JNIEnv *, jclass, jobject, jobject);
 
 #ifdef __cplusplus
 }

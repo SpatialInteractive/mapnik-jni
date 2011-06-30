@@ -1,7 +1,7 @@
 include common.mk
 
 
-libmapnik-jni.so: mapnikjni.cpp mapnikjni.h
+libmapnik-jni.so: $(SOURCE_DEPENDS)
 	$(CXX) -o libmapnik-jni.so \
 		-fPIC -shared \
 		$(CFLAGS) \

@@ -36,7 +36,7 @@ public class Map {
 	public native void setHeight(int height);
 	public native void resize(int widht, int height);
 	public native String getSrs();
-	public native String setSrs(String srs);
+	public native void setSrs(String srs);
 	
 	public native void setBufferSize(int bufferSize);
 	public native int getBufferSize();
@@ -79,4 +79,14 @@ public class Map {
 	public native void setBackground(Color color);
 	public native String getBackgroundImage();
 	public native void setBackgroundImage(String filename);
+	
+	// Save map
+	public native void saveMapToFile(String fileName, boolean explicitDefaults);
+	public native byte[] saveMapToBuffer(boolean explicitDefaults);
+	public void saveMapToFile(String fileName) {
+		saveMapToFile(fileName, false);
+	}
+	public byte[] saveMapToBuffer() {
+		return saveMapToBuffer(false);
+	}
 }
