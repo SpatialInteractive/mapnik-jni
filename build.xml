@@ -56,7 +56,7 @@
 		</delete>
 	</target>
 	
-	<target name="native-init">
+	<target name="native-init" depends="headers">
 		<condition property="platform.makefile" value="Makefile.osx">
 			<os family="mac"/>
 		</condition>

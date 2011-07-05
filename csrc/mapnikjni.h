@@ -87,6 +87,14 @@ JNIEXPORT jlong JNICALL Java_mapnik_Map_alloc__
 
 /*
  * Class:     mapnik_Map
+ * Method:    copy
+ * Signature: (J)J
+ */
+JNIEXPORT jlong JNICALL Java_mapnik_Map_copy
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     mapnik_Map
  * Method:    dealloc
  * Signature: (J)V
  */
@@ -1067,6 +1075,14 @@ JNIEXPORT jint JNICALL Java_mapnik_Image_getHeight
  */
 JNIEXPORT void JNICALL Java_mapnik_Image_saveToFile
   (JNIEnv *, jobject, jstring, jstring);
+
+/*
+ * Class:     mapnik_Image
+ * Method:    saveToMemory
+ * Signature: (Ljava/lang/String;)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_mapnik_Image_saveToMemory
+  (JNIEnv *, jobject, jstring);
 
 #ifdef __cplusplus
 }
