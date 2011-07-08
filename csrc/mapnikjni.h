@@ -58,6 +58,22 @@ extern "C" {
 JNIEXPORT void JNICALL Java_mapnik_Mapnik_nativeInit
   (JNIEnv *, jclass);
 
+/*
+ * Class:     mapnik_Mapnik
+ * Method:    getInstalledFontsDir
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_mapnik_Mapnik_getInstalledFontsDir
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     mapnik_Mapnik
+ * Method:    getInstalledInputPluginsDir
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_mapnik_Mapnik_getInstalledInputPluginsDir
+  (JNIEnv *, jclass);
+
 #ifdef __cplusplus
 }
 #endif

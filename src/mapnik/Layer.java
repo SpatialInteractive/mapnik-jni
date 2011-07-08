@@ -11,7 +11,7 @@ public class Layer {
 		ptr=alloc(name, srs);
 	}
 	public Layer(String name) {
-		this(name, Mapnik.SRS_DEFAULT);
+		this(name, Projection.LATLNG_PARAMS);
 	}
 	@Override
 	protected void finalize() throws Throwable {

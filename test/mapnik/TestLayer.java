@@ -7,7 +7,7 @@ import static org.junit.Assert.*;
 public class TestLayer {
 	@BeforeClass
 	public static void initMapnik() {
-		TestBase.initialize();
+		Setup.initialize();
 	}
 
 	@Test

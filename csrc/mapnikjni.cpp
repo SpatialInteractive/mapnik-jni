@@ -39,3 +39,33 @@ JNIEXPORT void JNICALL Java_mapnik_Mapnik_nativeInit
 		initialized=true;
 }
 
+/*
+ * Class:     mapnik_Mapnik
+ * Method:    getInstalledFontsDir
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_mapnik_Mapnik_getInstalledFontsDir
+  (JNIEnv *env, jclass)
+{
+#ifndef MAPNIK_FONTS_DIR
+	return 0;
+#else
+	return env->NewStringUTF(MAPNIK_FONTS_DIR);
+#endif
+}
+
+/*
+ * Class:     mapnik_Mapnik
+ * Method:    getInstalledInputPluginsDir
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_mapnik_Mapnik_getInstalledInputPluginsDir
+  (JNIEnv *env, jclass)
+{
+#ifndef MAPNIK_INPUT_PLUGINS_DIR
+	return 0;
+#else
+	return env->NewStringUTF(MAPNIK_INPUT_PLUGINS_DIR);
+#endif
+}
+

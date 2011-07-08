@@ -11,7 +11,7 @@ public class TestMap {
 	public static final String SRS_MERCATOR="+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs +over";
 	@BeforeClass
 	public static void initMapnik() {
-		TestBase.initialize();
+		Setup.initialize();
 	}
 	
 	@Test
@@ -26,7 +26,7 @@ public class TestMap {
 		map=new Map();
 		assertEquals(400, map.getWidth());
 		assertEquals(400, map.getHeight());
-		assertEquals(Mapnik.SRS_DEFAULT, map.getSrs());
+		assertEquals(Projection.LATLNG_PARAMS, map.getSrs());
 		
 		map=new Map(500, 500, SRS_MERCATOR);
 		assertEquals(500, map.getWidth());

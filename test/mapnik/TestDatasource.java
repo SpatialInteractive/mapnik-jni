@@ -8,7 +8,7 @@ import org.junit.Test;
 public class TestDatasource {
 	@BeforeClass
 	public static void initMapnik() {
-		TestBase.initialize();
+		Setup.initialize();
 	}
 
 	@Test
