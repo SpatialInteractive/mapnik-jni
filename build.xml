@@ -1,5 +1,6 @@
 <project name="mapnik_jni" default="all">
 	<property name="junit.jar" location="lib/junit-4.8.2.jar"/>
+	<property name="javadoc.dir" location="wiki/javadocs"/>
 	
 	<target name="compile">
 		<mkdir dir="build/classes"/>
@@ -44,6 +45,18 @@
 		</junit>
 		
 		<fail if="tests.failed" message="One or more tests failed"/>
+	</target>
+	
+	<target name="javadoc">
+		<delete dir="${javadoc.dir}"/>
+		<mkdir dir="${javadoc.dir}"/>
+		<javadoc sourcepath="src" destdir="${javadoc.dir}"
+			packagenames="mapnik"
+			access="public"
+			encoding="UTF-8"
+			windowtitle="mapnik-jni API documentation"
+			source="1.5"
+		/>
 	</target>
 	
 	<target name="clean">

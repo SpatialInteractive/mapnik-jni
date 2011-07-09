@@ -10,7 +10,11 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
-
+/**
+ * Global management of the Mapnik installation
+ * @author stella
+ *
+ */
 public class Mapnik {
 	private static boolean initialized;
 	private static boolean registered;
