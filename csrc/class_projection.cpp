@@ -9,9 +9,11 @@
 JNIEXPORT jlong JNICALL Java_mapnik_Projection_alloc
   (JNIEnv *env, jclass c, jstring paramsj)
 {
+	PREAMBLE;
 	refjavastring params(env, paramsj);
 	mapnik::projection* prj=new mapnik::projection(params.stringz);
 	return FROM_POINTER(prj);
+	TRAILER(0);
 }
 
 /*
@@ -20,9 +22,11 @@ JNIEXPORT jlong JNICALL Java_mapnik_Projection_alloc
  * Signature: (J)V
  */
 JNIEXPORT void JNICALL Java_mapnik_Projection_dealloc
-  (JNIEnv *env, jclass c, jlong ptr)
+  (JNIEnv *env, jobject, jlong ptr)
 {
+	PREAMBLE;
 	delete static_cast<mapnik::projection*>(TO_POINTER(ptr));
+	TRAILER_VOID;
 }
 
 /*
@@ -33,8 +37,10 @@ JNIEXPORT void JNICALL Java_mapnik_Projection_dealloc
 JNIEXPORT jstring JNICALL Java_mapnik_Projection_getParams
   (JNIEnv *env, jobject prjobject)
 {
+	PREAMBLE;
 	mapnik::projection* prj=LOAD_PROJECTION_POINTER(prjobject);
 	return env->NewStringUTF(prj->params().c_str());
+	TRAILER(0);
 }
 
 /*
@@ -45,8 +51,10 @@ JNIEXPORT jstring JNICALL Java_mapnik_Projection_getParams
 JNIEXPORT jstring JNICALL Java_mapnik_Projection_getExpanded
   (JNIEnv *env, jobject prjobject)
 {
+	PREAMBLE;
 	mapnik::projection* prj=LOAD_PROJECTION_POINTER(prjobject);
 	return env->NewStringUTF(prj->expanded().c_str());
+	TRAILER(0);
 }
 
 /*
@@ -57,6 +65,7 @@ JNIEXPORT jstring JNICALL Java_mapnik_Projection_getExpanded
 JNIEXPORT void JNICALL Java_mapnik_Projection_forward
   (JNIEnv *env, jobject prjobject, jobject coord)
 {
+	PREAMBLE;
 	if (!coord) return;
 	mapnik::projection* prj=LOAD_PROJECTION_POINTER(prjobject);
 	double x=env->GetDoubleField(coord, FIELD_COORD_X),
@@ -64,6 +73,7 @@ JNIEXPORT void JNICALL Java_mapnik_Projection_forward
 	prj->forward(x, y);
 	env->SetDoubleField(coord, FIELD_COORD_X, x);
 	env->SetDoubleField(coord, FIELD_COORD_Y, y);
+	TRAILER_VOID;
 }
 
 /*
@@ -74,6 +84,7 @@ JNIEXPORT void JNICALL Java_mapnik_Projection_forward
 JNIEXPORT void JNICALL Java_mapnik_Projection_inverse
 	(JNIEnv *env, jobject prjobject, jobject coord)
 {
+	PREAMBLE;
 	if (!coord) return;
 	mapnik::projection* prj=LOAD_PROJECTION_POINTER(prjobject);
 	double x=env->GetDoubleField(coord, FIELD_COORD_X),
@@ -81,5 +92,6 @@ JNIEXPORT void JNICALL Java_mapnik_Projection_inverse
 	prj->inverse(x, y);
 	env->SetDoubleField(coord, FIELD_COORD_X, x);
 	env->SetDoubleField(coord, FIELD_COORD_Y, y);
+	TRAILER_VOID;
 }
 

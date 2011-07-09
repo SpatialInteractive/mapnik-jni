@@ -1,12 +1,8 @@
 //// -- Globals
-struct classinfo_t {
-	jclass java_class;
-	jfieldID ptr_field;
-	jfieldID parentref_field;
-};
 
 static bool initialized=false;
-static classinfo_t
+static jclass
+	CLASS_NATIVEOBJECT,
 	CLASS_MAP,
 	CLASS_LAYER,
 	CLASS_DATASOURCE,
@@ -29,6 +25,7 @@ static jclass
 	CLASS_LAYERDESCRIPTOR,
 	CLASS_ATTRIBUTEDESCRIPTOR;
 static jmethodID
+	CTOR_NATIVEOBJECT,
 	CTOR_PARAMETERS,
 	METHOD_PARAMETERS_SET_STRING,
 	METHOD_PARAMETERS_SET_INT,
@@ -42,6 +39,7 @@ static jmethodID
 	METHOD_LAYERDESCRIPTOR_ADDDESCRIPTOR,
 	CTOR_ATTRIBUTEDESCRIPTOR;
 static jfieldID
+	FIELD_PTR,
 	FIELD_BOX2D_MINX,
 	FIELD_BOX2D_MINY,
 	FIELD_BOX2D_MAXX,
@@ -99,118 +97,135 @@ inline static long ASSERT_LONG_POINTER(long ptr) {
 #define TRAILER_VOID } catch (std::exception& e) { throw_java_exception(env, e); return; }
 
 // Pointer access macros
-#define LOAD_MAP_POINTER(mapobj) (static_cast<mapnik::Map*>((void*)(env->GetLongField(mapobj, CLASS_MAP.ptr_field))))
-#define LOAD_LAYER_POINTER(layerobj) (static_cast<mapnik::layer*>((void*)(env->GetLongField(layerobj, CLASS_LAYER.ptr_field))))
-#define LOAD_DATASOURCE_POINTER(dsobj) (static_cast<mapnik::datasource_ptr*>((void*)(env->GetLongField(dsobj, CLASS_DATASOURCE.ptr_field))))
-#define LOAD_FEATURE_TYPE_STYLE_POINTER(styleobj) (static_cast<mapnik::feature_type_style*>((void*)(env->GetLongField(styleobj, CLASS_FEATURE_TYPE_STYLE.ptr_field))))
-#define LOAD_PROJECTION_POINTER(projobj) (static_cast<mapnik::projection*>((void*)(env->GetLongField(projobj, CLASS_PROJECTION.ptr_field))))
-#define LOAD_QUERY_POINTER(qobj) (static_cast<mapnik::query*>((void*)(env->GetLongField(qobj, CLASS_QUERY.ptr_field))))
-#define LOAD_FEATURESET_POINTER(fsobj) (static_cast<mapnik::featureset_ptr*>((void*)(env->GetLongField(fsobj, CLASS_FEATURESET.ptr_field))))
-#define LOAD_FEATURE_POINTER(fsobj) (static_cast<mapnik::feature_ptr*>((void*)(env->GetLongField(fsobj, FIELD_FEATURESET_FEATURE_PTR))))
-#define LOAD_GEOMETRY_POINTER(gobj) (static_cast<mapnik::geometry_type*>((void*)(ASSERT_LONG_POINTER(env->GetLongField(gobj, CLASS_GEOMETRY.ptr_field)))))
-#define LOAD_IMAGE_POINTER(iobj) (static_cast<mapnik::image_32*>((void*)(ASSERT_LONG_POINTER(env->GetLongField(iobj, CLASS_IMAGE.ptr_field)))))
+#define LOAD_OBJECT_POINTER(object) ((void*)(ASSERT_LONG_POINTER(env->GetLongField(object, FIELD_PTR))))
+#define LOAD_MAP_POINTER(object) (static_cast<mapnik::Map*>(LOAD_OBJECT_POINTER(object)))
+#define LOAD_LAYER_POINTER(object) (static_cast<mapnik::layer*>(LOAD_OBJECT_POINTER(object)))
+#define LOAD_DATASOURCE_POINTER(object) (static_cast<mapnik::datasource_ptr*>(LOAD_OBJECT_POINTER(object)))
+#define LOAD_FEATURE_TYPE_STYLE_POINTER(object) (static_cast<mapnik::feature_type_style*>(LOAD_OBJECT_POINTER(object)))
+#define LOAD_PROJECTION_POINTER(object) (static_cast<mapnik::projection*>(LOAD_OBJECT_POINTER(object)))
+#define LOAD_QUERY_POINTER(object) (static_cast<mapnik::query*>(LOAD_OBJECT_POINTER(object)))
+#define LOAD_FEATURESET_POINTER(object) (static_cast<mapnik::featureset_ptr*>(LOAD_OBJECT_POINTER(object)))
+#define LOAD_FEATURE_POINTER(object) (static_cast<mapnik::feature_ptr*>(TO_POINTER(env->GetLongField(object, FIELD_FEATURESET_FEATURE_PTR))))
+#define LOAD_GEOMETRY_POINTER(object) (static_cast<mapnik::geometry_type*>(LOAD_OBJECT_POINTER(object)))
+#define LOAD_IMAGE_POINTER(object) (static_cast<mapnik::image_32*>(LOAD_OBJECT_POINTER(object)))
 
-static bool init_class(JNIEnv* env, const char* name, classinfo_t& ci, bool has_parentref) {
-	//printf("Initing %s\n", name);
-
-	ci.ptr_field=0;
-	ci.parentref_field=0;
-	ci.java_class=(jclass)env->NewGlobalRef(env->FindClass(name));
-	if (!ci.java_class) return false;
-
-	ci.ptr_field=env->GetFieldID(ci.java_class, "ptr", "J");
-	if (!ci.ptr_field) return false;
-
-	if (has_parentref) {
-		ci.parentref_field=env->GetFieldID(ci.java_class, "parentref", "Ljava/lang/Object;");
-		if (!ci.parentref_field) {
-			return false;
-		}
+static void init_class(JNIEnv* env, const char* name, jclass& classref) {
+	classref=(jclass)env->NewGlobalRef(env->FindClass(name));
+	if (!classref) {
+		std::string message("Unable to initialize class: ");
+		throw std::runtime_error(message + name);
 	}
+}
 
-	//printf("Inited %s\n", name);
-	return true;
+static jfieldID lookup_field(JNIEnv* env, jclass c, const char* name, const char* sig)
+{
+	jfieldID ret=env->GetFieldID(c, name, sig);
+	if (!ret) {
+		std::string message("Unable to find field: ");
+		throw std::runtime_error(message + name + ", Signature: " + sig);
+	}
+	return ret;
+}
+
+static jmethodID lookup_method(JNIEnv* env, jclass c, const char* name, const char* sig)
+{
+	jmethodID ret=env->GetMethodID(c, name, sig);
+	if (!ret) {
+		std::string message("Unable to find method: ");
+		throw std::runtime_error(message + name + ", Signature: " + sig);
+	}
+	return ret;
+}
+
+static jmethodID lookup_static_method(JNIEnv* env, jclass c, const char* name, const char* sig)
+{
+	jmethodID ret=env->GetStaticMethodID(c, name, sig);
+	if (!ret) {
+		std::string message("Unable to find method: ");
+		throw std::runtime_error(message + name + ", Signature: " + sig);
+	}
+	return ret;
 }
 
 static bool init_ids(JNIEnv* env) {
-	// Load classes
-	if (!(
-		init_class(env, "mapnik/Map", CLASS_MAP, false) &&
-		init_class(env, "mapnik/Datasource", CLASS_DATASOURCE, false) &&
-		init_class(env, "mapnik/DatasourceCache", CLASS_DATASOURCE_CACHE, false) &&
-		init_class(env, "mapnik/Layer", CLASS_LAYER, false) &&
-		init_class(env, "mapnik/FeatureTypeStyle", CLASS_FEATURE_TYPE_STYLE, false) &&
-		init_class(env, "mapnik/Projection", CLASS_PROJECTION, false) &&
-		init_class(env, "mapnik/Query", CLASS_QUERY, false) &&
-		init_class(env, "mapnik/FeatureSet", CLASS_FEATURESET, false) &&
-		init_class(env, "mapnik/Geometry", CLASS_GEOMETRY, false) &&
-		init_class(env, "mapnik/Image", CLASS_IMAGE, false)
-		)) {
-		throw_error(env, "Error initializing native references");
-		return false;
-	}
+	// Load NativeObject classes
+	init_class(env, "mapnik/NativeObject", CLASS_NATIVEOBJECT);
+	init_class(env, "mapnik/MapDefinition", CLASS_MAP);
+	init_class(env, "mapnik/Datasource", CLASS_DATASOURCE);
+	init_class(env, "mapnik/DatasourceCache", CLASS_DATASOURCE_CACHE);
+	init_class(env, "mapnik/Layer", CLASS_LAYER);
+	init_class(env, "mapnik/FeatureTypeStyle", CLASS_FEATURE_TYPE_STYLE);
+	init_class(env, "mapnik/Projection", CLASS_PROJECTION);
+	init_class(env, "mapnik/Query", CLASS_QUERY);
+	init_class(env, "mapnik/FeatureSet", CLASS_FEATURESET);
+	init_class(env, "mapnik/Geometry", CLASS_GEOMETRY);
+	init_class(env, "mapnik/Image", CLASS_IMAGE);
+
+	// Ptr
+	CTOR_NATIVEOBJECT=lookup_method(env, CLASS_NATIVEOBJECT, "<init>", "()V");
+	FIELD_PTR=lookup_field(env, CLASS_NATIVEOBJECT, "ptr", "J");
 
 	// FeatureSet
-	FIELD_FEATURESET_FEATURE_PTR=env->GetFieldID(CLASS_FEATURESET.java_class, "feature_ptr", "J");
+	FIELD_FEATURESET_FEATURE_PTR=lookup_field(env, CLASS_FEATURESET, "feature_ptr", "J");
 
 	// String
-	CLASS_STRING=(jclass)env->NewGlobalRef(env->FindClass("java/lang/String"));
+	init_class(env, "java/lang/String", CLASS_STRING);
 
 	// Integer
-	CLASS_INTEGER=(jclass)env->NewGlobalRef(env->FindClass("java/lang/Integer"));
-	METHOD_INTEGER_VALUEOF=env->GetStaticMethodID(CLASS_INTEGER, "valueOf", "(I)Ljava/lang/Integer;");
+	init_class(env, "java/lang/Integer", CLASS_INTEGER);
+	METHOD_INTEGER_VALUEOF=lookup_static_method(env, CLASS_INTEGER, "valueOf", "(I)Ljava/lang/Integer;");
 
 	// Double
-	CLASS_DOUBLE=(jclass)env->NewGlobalRef(env->FindClass("java/lang/Double"));
-	METHOD_DOUBLE_VALUEOF=env->GetStaticMethodID(CLASS_DOUBLE, "valueOf", "(D)Ljava/lang/Double;");
+	init_class(env, "java/lang/Double", CLASS_DOUBLE);
+	METHOD_DOUBLE_VALUEOF=lookup_static_method(env, CLASS_DOUBLE, "valueOf", "(D)Ljava/lang/Double;");
 
 	// Parameters
-	CLASS_PARAMETERS=(jclass)env->NewGlobalRef(env->FindClass("mapnik/Parameters"));
-	CTOR_PARAMETERS=env->GetMethodID(CLASS_PARAMETERS, "<init>", "()V");
-	METHOD_PARAMETERS_SET_STRING=env->GetMethodID(CLASS_PARAMETERS, "setString", "(Ljava/lang/String;Ljava/lang/String;)V");
-	METHOD_PARAMETERS_SET_INT=env->GetMethodID(CLASS_PARAMETERS, "setInt", "(Ljava/lang/String;I)V");
-	METHOD_PARAMETERS_SET_DOUBLE=env->GetMethodID(CLASS_PARAMETERS, "setDouble", "(Ljava/lang/String;D)V");
-	METHOD_PARAMETERS_COPY_TO_NATIVE=env->GetMethodID(CLASS_PARAMETERS, "copyToNative", "(J)V");
+	init_class(env, "mapnik/Parameters", CLASS_PARAMETERS);
+	CTOR_PARAMETERS=lookup_method(env, CLASS_PARAMETERS, "<init>", "()V");
+	METHOD_PARAMETERS_SET_STRING=lookup_method(env, CLASS_PARAMETERS, "setString", "(Ljava/lang/String;Ljava/lang/String;)V");
+	METHOD_PARAMETERS_SET_INT=lookup_method(env, CLASS_PARAMETERS, "setInt", "(Ljava/lang/String;I)V");
+	METHOD_PARAMETERS_SET_DOUBLE=lookup_method(env, CLASS_PARAMETERS, "setDouble", "(Ljava/lang/String;D)V");
+	METHOD_PARAMETERS_COPY_TO_NATIVE=lookup_method(env, CLASS_PARAMETERS, "copyToNative", "(J)V");
 
 	// HashSet
-	CLASS_HASHSET=(jclass)env->NewGlobalRef(env->FindClass("java/util/HashSet"));
-	CTOR_HASHSET=env->GetMethodID(CLASS_HASHSET, "<init>", "()V");
-	METHOD_HASHSET_ADD=env->GetMethodID(CLASS_HASHSET, "add", "(Ljava/lang/Object;)Z");
+	init_class(env, "java/util/HashSet", CLASS_HASHSET);
+	CTOR_HASHSET=lookup_method(env, CLASS_HASHSET, "<init>", "()V");
+	METHOD_HASHSET_ADD=lookup_method(env, CLASS_HASHSET, "add", "(Ljava/lang/Object;)Z");
 
 	// Box2d
-	CLASS_BOX2D=(jclass)env->NewGlobalRef(env->FindClass("mapnik/Box2d"));
-	FIELD_BOX2D_MINX=env->GetFieldID(CLASS_BOX2D, "minx", "D");
-	FIELD_BOX2D_MINY=env->GetFieldID(CLASS_BOX2D, "miny", "D");
-	FIELD_BOX2D_MAXX=env->GetFieldID(CLASS_BOX2D, "maxx", "D");
-	FIELD_BOX2D_MAXY=env->GetFieldID(CLASS_BOX2D, "maxy", "D");
+	init_class(env, "mapnik/Box2d", CLASS_BOX2D);
+	FIELD_BOX2D_MINX=lookup_field(env, CLASS_BOX2D, "minx", "D");
+	FIELD_BOX2D_MINY=lookup_field(env, CLASS_BOX2D, "miny", "D");
+	FIELD_BOX2D_MAXX=lookup_field(env, CLASS_BOX2D, "maxx", "D");
+	FIELD_BOX2D_MAXY=lookup_field(env, CLASS_BOX2D, "maxy", "D");
 
 	// Color
-	CLASS_COLOR=(jclass)env->NewGlobalRef(env->FindClass("mapnik/Color"));
-	FIELD_COLOR_RED=env->GetFieldID(CLASS_COLOR, "red", "I");
-	FIELD_COLOR_GREEN=env->GetFieldID(CLASS_COLOR, "green", "I");
-	FIELD_COLOR_BLUE=env->GetFieldID(CLASS_COLOR, "blue", "I");
-	FIELD_COLOR_ALPHA=env->GetFieldID(CLASS_COLOR, "alpha", "I");
+	init_class(env, "mapnik/Color", CLASS_COLOR);
+	FIELD_COLOR_RED=lookup_field(env, CLASS_COLOR, "red", "I");
+	FIELD_COLOR_GREEN=lookup_field(env, CLASS_COLOR, "green", "I");
+	FIELD_COLOR_BLUE=lookup_field(env, CLASS_COLOR, "blue", "I");
+	FIELD_COLOR_ALPHA=lookup_field(env, CLASS_COLOR, "alpha", "I");
 
 	// Coord
-	CLASS_COORD=(jclass)env->NewGlobalRef(env->FindClass("mapnik/Coord"));
-	FIELD_COORD_X=env->GetFieldID(CLASS_COORD, "x", "D");
-	FIELD_COORD_Y=env->GetFieldID(CLASS_COORD, "y", "D");
+	init_class(env, "mapnik/Coord", CLASS_COORD);
+	FIELD_COORD_X=lookup_field(env, CLASS_COORD, "x", "D");
+	FIELD_COORD_Y=lookup_field(env, CLASS_COORD, "y", "D");
 
 	// LayerDescriptor
-	CLASS_LAYERDESCRIPTOR=(jclass)env->NewGlobalRef(env->FindClass("mapnik/LayerDescriptor"));
-	CTOR_LAYERDESCRIPTOR=env->GetMethodID(CLASS_LAYERDESCRIPTOR, "<init>", "()V");
-	FIELD_LAYERDESCRIPTOR_NAME=env->GetFieldID(CLASS_LAYERDESCRIPTOR, "name", "Ljava/lang/String;");
-	FIELD_LAYERDESCRIPTOR_ENCODING=env->GetFieldID(CLASS_LAYERDESCRIPTOR, "encoding", "Ljava/lang/String;");
-	METHOD_LAYERDESCRIPTOR_ADDDESCRIPTOR=env->GetMethodID(CLASS_LAYERDESCRIPTOR, "addDescriptor", "(Lmapnik/AttributeDescriptor;)V");
+	init_class(env, "mapnik/LayerDescriptor", CLASS_LAYERDESCRIPTOR);
+	CTOR_LAYERDESCRIPTOR=lookup_method(env, CLASS_LAYERDESCRIPTOR, "<init>", "()V");
+	FIELD_LAYERDESCRIPTOR_NAME=lookup_field(env, CLASS_LAYERDESCRIPTOR, "name", "Ljava/lang/String;");
+	FIELD_LAYERDESCRIPTOR_ENCODING=lookup_field(env, CLASS_LAYERDESCRIPTOR, "encoding", "Ljava/lang/String;");
+	METHOD_LAYERDESCRIPTOR_ADDDESCRIPTOR=lookup_method(env, CLASS_LAYERDESCRIPTOR, "addDescriptor", "(Lmapnik/AttributeDescriptor;)V");
 
 	// AttributeDescriptor
-	CLASS_ATTRIBUTEDESCRIPTOR=(jclass)env->NewGlobalRef(env->FindClass("mapnik/AttributeDescriptor"));
-	CTOR_ATTRIBUTEDESCRIPTOR=env->GetMethodID(CLASS_ATTRIBUTEDESCRIPTOR, "<init>", "()V");
-	FIELD_ATTRIBUTEDESCRIPTOR_NAME=env->GetFieldID(CLASS_ATTRIBUTEDESCRIPTOR, "name", "Ljava/lang/String;");
-	FIELD_ATTRIBUTEDESCRIPTOR_TYPE=env->GetFieldID(CLASS_ATTRIBUTEDESCRIPTOR, "type", "I");
-	FIELD_ATTRIBUTEDESCRIPTOR_PRIMARYKEY=env->GetFieldID(CLASS_ATTRIBUTEDESCRIPTOR, "primaryKey", "Z");
-	FIELD_ATTRIBUTEDESCRIPTOR_SIZE=env->GetFieldID(CLASS_ATTRIBUTEDESCRIPTOR, "size", "I");
-	FIELD_ATTRIBUTEDESCRIPTOR_PRECISION=env->GetFieldID(CLASS_ATTRIBUTEDESCRIPTOR, "precision", "I");
+	init_class(env, "mapnik/AttributeDescriptor", CLASS_ATTRIBUTEDESCRIPTOR);
+	CTOR_ATTRIBUTEDESCRIPTOR=lookup_method(env, CLASS_ATTRIBUTEDESCRIPTOR, "<init>", "()V");
+	FIELD_ATTRIBUTEDESCRIPTOR_NAME=lookup_field(env, CLASS_ATTRIBUTEDESCRIPTOR, "name", "Ljava/lang/String;");
+	FIELD_ATTRIBUTEDESCRIPTOR_TYPE=lookup_field(env, CLASS_ATTRIBUTEDESCRIPTOR, "type", "I");
+	FIELD_ATTRIBUTEDESCRIPTOR_PRIMARYKEY=lookup_field(env, CLASS_ATTRIBUTEDESCRIPTOR, "primaryKey", "Z");
+	FIELD_ATTRIBUTEDESCRIPTOR_SIZE=lookup_field(env, CLASS_ATTRIBUTEDESCRIPTOR, "size", "I");
+	FIELD_ATTRIBUTEDESCRIPTOR_PRECISION=lookup_field(env, CLASS_ATTRIBUTEDESCRIPTOR, "precision", "I");
 
 	return true;
 }

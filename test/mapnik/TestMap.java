@@ -3,6 +3,7 @@ package mapnik;
 import java.util.Arrays;
 import java.util.Set;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -13,22 +14,27 @@ public class TestMap {
 	public static void initMapnik() {
 		Setup.initialize();
 	}
+	@AfterClass
+	public static void tearDownMapnik() {
+		Setup.tearDown();
+	}
+	
 	
 	@Test
 	public void testAlloc() {
-		Map map=new Map();
+		MapDefinition map=new MapDefinition();
 	}
 	
 	@Test
 	public void testConstructorSettings() {
-		Map map;
+		MapDefinition map;
 		
-		map=new Map();
+		map=new MapDefinition();
 		assertEquals(400, map.getWidth());
 		assertEquals(400, map.getHeight());
 		assertEquals(Projection.LATLNG_PARAMS, map.getSrs());
 		
-		map=new Map(500, 500, SRS_MERCATOR);
+		map=new MapDefinition(500, 500, SRS_MERCATOR);
 		assertEquals(500, map.getWidth());
 		assertEquals(500, map.getHeight());
 		assertEquals(SRS_MERCATOR, map.getSrs());
@@ -36,7 +42,7 @@ public class TestMap {
 	
 	@Test
 	public void testSize() {
-		Map map=new Map();
+		MapDefinition map=new MapDefinition();
 		map.setWidth(500);
 		map.setHeight(600);
 		assertEquals(500, map.getWidth());
@@ -49,14 +55,14 @@ public class TestMap {
 	
 	@Test
 	public void testSrs() {
-		Map map=new Map();
+		MapDefinition map=new MapDefinition();
 		map.setSrs(SRS_MERCATOR);
 		assertEquals(SRS_MERCATOR, map.getSrs());
 	}
 	
 	@Test
 	public void testBufferSize() {
-		Map map=new Map();
+		MapDefinition map=new MapDefinition();
 		assertEquals(0, map.getBufferSize());
 		map.setBufferSize(256);
 		assertEquals(256, map.getBufferSize());
@@ -64,7 +70,7 @@ public class TestMap {
 	
 	@Test
 	public void testBasePath() {
-		Map map=new Map();
+		MapDefinition map=new MapDefinition();
 		assertEquals("", map.getBasePath());
 		map.setBasePath("/tmp");
 		assertEquals("/tmp", map.getBasePath());
@@ -73,7 +79,7 @@ public class TestMap {
 	@Test
 	public void testNullHandling() {
 		String mapXml="<Map buffer-size='256'></Map>";
-		Map map=new Map();
+		MapDefinition map=new MapDefinition();
 		map.loadMapString(mapXml, false, null);
 		assertEquals("", map.getBasePath());
 	}
@@ -81,7 +87,7 @@ public class TestMap {
 	@Test
 	public void testMapLoad() {
 		String mapXml="<Map buffer-size='256'></Map>";
-		Map map=new Map();
+		MapDefinition map=new MapDefinition();
 		map.loadMapString(mapXml, false, "");
 		
 		assertEquals(256, map.getBufferSize());
@@ -89,7 +95,7 @@ public class TestMap {
 	
 	@Test
 	public void testStyle() {
-		Map map=new Map();
+		MapDefinition map=new MapDefinition();
 		assertNull(map.getStyle("notexist"));
 		assertEquals(0, map.getStyleNames().size());
 		map.removeStyle("notexist");
@@ -103,7 +109,7 @@ public class TestMap {
 	
 	@Test
 	public void testCollectAttributes() {
-		Map map=new Map();
+		MapDefinition map=new MapDefinition();
 		map.loadMap("test/testmap.xml", false);
 		FeatureTypeStyle style=map.getStyle("landmark-poly-text");
 		

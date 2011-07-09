@@ -1,8 +1,6 @@
 package mapnik;
 
 public class DatasourceCache {
-	private long ptr;
-	
 	public static native String[] pluginNames();
 	public static native String pluginDirectories();
 	public static native void registerDatasources(String path);

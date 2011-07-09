@@ -1,6 +1,5 @@
 package mapnik;
 
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -9,12 +8,9 @@ import java.util.Set;
  * @author stella
  *
  */
-public class FeatureSet {
-	/**
-	 * Pointer to mapnik::featureset_ptr
-	 */
-	private long ptr;
-	
+public class FeatureSet extends NativeObject {
+	// Pointer to mapnik::featureset_ptr
+
 	/**
 	 * Pointer to mapnik::feature_ptr
 	 */
@@ -25,18 +21,13 @@ public class FeatureSet {
 	 */
 	private Geometry[] feature_geometries;
 	
-	/**
-	 * This class is only ever alloc'd from native code so hide the ctor
-	 */
-	private FeatureSet() {
+	void dealloc(long ptr) {
+		long localFeaturePtr=feature_ptr;
+		feature_ptr=0;
+		dealloc(ptr, localFeaturePtr);
 	}
 	
-	@Override
-	protected void finalize() throws Throwable {
-		dealloc(ptr, feature_ptr);
-	}
-	
-	private native static void dealloc(long ptr, long feature_ptr);
+	private native void dealloc(long ptr, long feature_ptr);
 	private native boolean _next();
 	private native Geometry[] _loadGeometries();
 	
@@ -49,7 +40,7 @@ public class FeatureSet {
 		// First release the geometries
 		if (feature_geometries!=null) {
 			for (int i=0; i<feature_geometries.length; i++) {
-				feature_geometries[i].invalidate();
+				feature_geometries[i].dispose();
 			}
 			feature_geometries=null;
 		}

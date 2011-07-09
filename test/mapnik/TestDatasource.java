@@ -2,24 +2,26 @@ package mapnik;
 
 import java.util.Set;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TestDatasource {
+	public static final String SHAPEFILE_NAME="data/TM_WORLD_BORDERS_SIMPL_0.3_MOD";
 	@BeforeClass
 	public static void initMapnik() {
 		Setup.initialize();
+	}
+	@AfterClass
+	public static void tearDownMapnik() {
+		Setup.tearDown();
 	}
 
 	@Test
 	public void testBindAndTableDescriptors() {
 		Parameters params=new Parameters();
-		params.put("type", "postgis");
-		params.put("host", "localhost");
-		params.put("port", 5432);
-		params.put("user", "stella");
-		params.put("dbname", "stella");
-		params.put("table", "planet_osm_line");
+		params.put("type", "shape");
+		params.put("file", SHAPEFILE_NAME);
 		
 		Datasource ds=DatasourceCache.create(params, true);
 		System.out.println("Bound datasource");
@@ -30,40 +32,15 @@ public class TestDatasource {
 	}
 	
 	@Test
-	public void testBindAndSubqueryDescriptors() {
-		Parameters params=new Parameters();
-		params.put("type", "postgis");
-		params.put("host", "localhost");
-		params.put("port", 5432);
-		params.put("user", "stella");
-		params.put("dbname", "stella");
-		params.put("table", "(select way,landuse from planet_osm_polygon where landuse in ('military') order by z_order,way_area desc) as military");
-		
-		Datasource ds=DatasourceCache.create(params, true);
-		System.out.println("Bound datasource");
-		LayerDescriptor ld=ds.getDescriptor();
-		System.out.println("subquery  descriptor:");
-		System.out.println(ld.toString());
-	}
-	
-	@Test
 	public void testFeatures() {
 		Parameters params=new Parameters();
-		params.put("type", "postgis");
-		params.put("host", "localhost");
-		params.put("port", 5432);
-		params.put("user", "stella");
-		params.put("dbname", "stella");
-		params.put("table", "planet_osm_line");
-		params.put("row_limit", 10);
-		//params.put("cursor_size", "100");
+		params.put("type", "shape");
+		params.put("file", SHAPEFILE_NAME);
 		
 		Datasource ds=DatasourceCache.create(params, true);
 		LayerDescriptor ld=ds.getDescriptor();
 		
 		Box2d bbox=new Box2d(-180, -85, 180, 85);
-		Projection prj=new Projection(Projection.SRS900913_PARAMS);
-		prj.forward(bbox);
 		
 		Query query=new Query(bbox);
 		for (AttributeDescriptor attr: ld.getDescriptors()) {

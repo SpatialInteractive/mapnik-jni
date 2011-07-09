@@ -1,18 +1,12 @@
 package mapnik;
 
-public class Datasource {
-	/**
-	 * Native pointer: boost::shared_ptr<mapnik::datasource>
-	 */
-	private long ptr;
+public class Datasource extends NativeObject {
+	// Native pointer: boost::shared_ptr<mapnik::datasource>
 	
-	private static native void dealloc(long ptr);
+	@Override
+	native void dealloc(long ptr);
 	
 	private Datasource() {
-	}
-	@Override
-	protected void finalize() throws Throwable {
-		dealloc(ptr);
 	}
 	
 	public native Parameters getParameters();

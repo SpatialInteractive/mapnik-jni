@@ -8,7 +8,7 @@
 	</target>
 	
 	<target name="headers" depends="compile">
-		<javah class="mapnik.Parameters,mapnik.Mapnik,mapnik.Map,mapnik.Layer,mapnik.FeatureTypeStyle,mapnik.Datasource,mapnik.DatasourceCache,mapnik.Projection,mapnik.Query,mapnik.FeatureSet,mapnik.Geometry,mapnik.Image,mapnik.Renderer,mapnik.FreetypeEngine" outputfile="csrc/mapnikjni.h" classpath="build/classes"/>
+		<javah class="mapnik.Parameters,mapnik.Mapnik,mapnik.MapDefinition,mapnik.Layer,mapnik.FeatureTypeStyle,mapnik.Datasource,mapnik.DatasourceCache,mapnik.Projection,mapnik.Query,mapnik.FeatureSet,mapnik.Geometry,mapnik.Image,mapnik.Renderer,mapnik.FreetypeEngine" outputfile="csrc/mapnikjni.h" classpath="build/classes"/>
 	</target>
 	
 	<target name="jar" depends="compile">
@@ -27,7 +27,6 @@
 		</javac>
 	
 		<junit fork="true" failureproperty="tests.failed" showoutput="false" printsummary="true">
-			<jvmarg value="-Djava.library.path=csrc"/>
 			<classpath>
 				<pathelement location="${junit.jar}"/>
 				<pathelement location="build/dist/mapnik-jni.jar"/>

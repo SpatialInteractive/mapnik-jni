@@ -1,6 +1,6 @@
 package mapnik;
 
-public class Projection {
+public class Projection extends NativeObject {
 	public static final String LATLNG_PARAMS="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs";
 	
 	/**
@@ -8,10 +8,10 @@ public class Projection {
 	 */
 	public static final String SRS900913_PARAMS="+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs +over";
 	
-	private long ptr;
-	
 	private static native long alloc(String params);
-	private static native void dealloc(long ptr);
+	
+	@Override
+	native void dealloc(long ptr);
 	
 	public Projection(String params) {
 		if (params==null) {
@@ -21,10 +21,6 @@ public class Projection {
 	}
 	public Projection() {
 		ptr=alloc(LATLNG_PARAMS);
-	}
-	@Override
-	protected void finalize() throws Throwable {
-		dealloc(ptr);
 	}
 	
 	@Override

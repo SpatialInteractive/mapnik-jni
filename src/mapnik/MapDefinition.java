@@ -7,29 +7,24 @@ import java.util.Collection;
  * @author stella
  *
  */
-public class Map {
-	private long ptr;
-	
+public class MapDefinition extends NativeObject {
 	private static native long alloc(int width, int height, String srs);
 	private static native long alloc();
 	private static native long copy(long ptr);
-	private static native void dealloc(long ptr);
 	
-	public Map() {
+	@Override
+	native void dealloc(long ptr);
+	
+	public MapDefinition() {
 		ptr=alloc();
 	}
 	
-	public Map(int width, int height, String srs) {
+	public MapDefinition(int width, int height, String srs) {
 		ptr=alloc(width, height, srs);
 	}
 	
-	public Map(Map other) {
+	public MapDefinition(MapDefinition other) {
 		ptr=copy(other.ptr);
-	}
-	
-	@Override
-	protected void finalize() throws Throwable {
-		dealloc(ptr);
 	}
 	
 	public native void loadMap(String filename, boolean strict);

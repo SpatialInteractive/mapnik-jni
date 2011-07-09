@@ -1,22 +1,16 @@
 package mapnik;
 
-public class Geometry {
-	/**
-	 * mapnik::geometry_type*
-	 */
-	private long ptr;
+public class Geometry extends NativeObject {
+	// mapnik::geometry_type*
 	
 	/**
 	 * Only ever alloc'd from native code
 	 */
 	private Geometry() {
 	}
-	
-	/**
-	 * Invalidate this reference
-	 */
-	void invalidate() {
-		ptr=0;
+
+	@Override
+	void dealloc(long ptr) {
 	}
 	
 	public static final int

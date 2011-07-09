@@ -5,13 +5,14 @@
  * Signature: (J)V
  */
 JNIEXPORT void JNICALL Java_mapnik_Datasource_dealloc
-  (JNIEnv *env, jclass c, jlong ptr)
+  (JNIEnv *env, jobject, jlong ptr)
 {
+	PREAMBLE;
 	mapnik::datasource_ptr* dspinned=
 			static_cast<mapnik::datasource_ptr*>(
 					TO_POINTER(ptr));
 	delete dspinned;
-
+	TRAILER_VOID;
 }
 
 
@@ -23,6 +24,7 @@ JNIEXPORT void JNICALL Java_mapnik_Datasource_dealloc
 JNIEXPORT jobject JNICALL Java_mapnik_Datasource_getParameters
   (JNIEnv *env, jobject dsobj)
 {
+	PREAMBLE;
 	mapnik::datasource_ptr* dsp=LOAD_DATASOURCE_POINTER(dsobj);
 	const mapnik::parameters& params((*dsp)->params());
 
@@ -34,6 +36,7 @@ JNIEXPORT jobject JNICALL Java_mapnik_Datasource_getParameters
 	}
 
 	return paramobject;
+	TRAILER(0);
 }
 
 /*
@@ -92,11 +95,15 @@ JNIEXPORT jobject JNICALL Java_mapnik_Datasource_features
 	mapnik::datasource_ptr* dsp=LOAD_DATASOURCE_POINTER(dsobj);
 	mapnik::query* query=LOAD_QUERY_POINTER(queryobj);
 
-	mapnik::featureset_ptr fs=(*dsp)->features(*query);
-	mapnik::featureset_ptr* fspinned=new mapnik::featureset_ptr(fs);
+	mapnik::featureset_ptr* fspinned;
 
-	jobject ret=env->AllocObject(CLASS_FEATURESET.java_class);
-	env->SetLongField(ret, CLASS_FEATURESET.ptr_field, FROM_POINTER(fspinned));
+	mapnik::featureset_ptr fs=(*dsp)->features(*query);
+	fspinned=new mapnik::featureset_ptr();
+	fs.swap(*fspinned);
+
+	jobject ret=env->NewObject(CLASS_FEATURESET, CTOR_NATIVEOBJECT);
+
+	env->SetLongField(ret, FIELD_PTR, FROM_POINTER(fspinned));
 	env->SetLongField(ret, FIELD_FEATURESET_FEATURE_PTR, 0l);
 	return ret;
 
@@ -123,8 +130,8 @@ JNIEXPORT jobject JNICALL Java_mapnik_Datasource_featuresAtPoint
 	mapnik::featureset_ptr fs=(*dsp)->features_at_point(pt);
 	mapnik::featureset_ptr* fspinned=new mapnik::featureset_ptr(fs);
 
-	jobject ret=env->AllocObject(CLASS_FEATURESET.java_class);
-	env->SetLongField(ret, CLASS_FEATURESET.ptr_field, FROM_POINTER(fspinned));
+	jobject ret=env->NewObject(CLASS_FEATURESET, CTOR_NATIVEOBJECT);
+	env->SetLongField(ret, FIELD_PTR, FROM_POINTER(fspinned));
 	return ret;
 
 	TRAILER(0);

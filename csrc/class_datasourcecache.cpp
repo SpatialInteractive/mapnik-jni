@@ -7,6 +7,7 @@
 JNIEXPORT jobjectArray JNICALL Java_mapnik_DatasourceCache_pluginNames
   (JNIEnv *env, jclass c)
 {
+	PREAMBLE;
 	std::vector<std::string> names(mapnik::datasource_cache::plugin_names());
 	jobjectArray ary=env->NewObjectArray(
 		names.size(),
@@ -20,6 +21,7 @@ JNIEXPORT jobjectArray JNICALL Java_mapnik_DatasourceCache_pluginNames
 	}
 
 	return ary;
+	TRAILER(0);
 }
 
 /*
@@ -30,8 +32,10 @@ JNIEXPORT jobjectArray JNICALL Java_mapnik_DatasourceCache_pluginNames
 JNIEXPORT jstring JNICALL Java_mapnik_DatasourceCache_pluginDirectories
   (JNIEnv *env, jclass c)
 {
+	PREAMBLE;
 	std::string s(mapnik::datasource_cache::plugin_directories());
 	return env->NewStringUTF(s.c_str());
+	TRAILER(0);
 }
 
 /*
@@ -42,13 +46,10 @@ JNIEXPORT jstring JNICALL Java_mapnik_DatasourceCache_pluginDirectories
 JNIEXPORT void JNICALL Java_mapnik_DatasourceCache_registerDatasources
   (JNIEnv *env, jclass c, jstring sj)
 {
-	try {
-		refjavastring path(env, sj);
-		mapnik::datasource_cache::register_datasources(path.stringz);
-	} catch (std::exception& e) {
-		throw_java_exception(env, e);
-		return;
-	}
+	PREAMBLE;
+	refjavastring path(env, sj);
+	mapnik::datasource_cache::register_datasources(path.stringz);
+	TRAILER_VOID;
 }
 
 /*
@@ -59,20 +60,17 @@ JNIEXPORT void JNICALL Java_mapnik_DatasourceCache_registerDatasources
 JNIEXPORT jobject JNICALL Java_mapnik_DatasourceCache_create
 	(JNIEnv *env, jclass c, jobject paramsmap, jboolean bind)
 {
-	try {
-		mapnik::parameters params;
-		translate_to_mapnik_parameters(env, paramsmap, params);
+	PREAMBLE;
+	mapnik::parameters params;
+	translate_to_mapnik_parameters(env, paramsmap, params);
 
-		mapnik::datasource_ptr ds=mapnik::datasource_cache::create(params, (bool)bind);
-		if (!ds) return 0;
+	mapnik::datasource_ptr ds=mapnik::datasource_cache::create(params, (bool)bind);
+	if (!ds) return 0;
 
-		mapnik::datasource_ptr *dspinned=new mapnik::datasource_ptr(ds);
-		jobject ret=env->AllocObject(CLASS_DATASOURCE.java_class);
-		env->SetLongField(ret, CLASS_DATASOURCE.ptr_field, FROM_POINTER(dspinned));
-		return ret;
-	} catch (std::exception& e) {
-		throw_java_exception(env, e);
-		return 0;
-	}
+	mapnik::datasource_ptr *dspinned=new mapnik::datasource_ptr(ds);
+	jobject ret=env->NewObject(CLASS_DATASOURCE, CTOR_NATIVEOBJECT);
+	env->SetLongField(ret, FIELD_PTR, FROM_POINTER(dspinned));
+	return ret;
+	TRAILER(0);
 }
 

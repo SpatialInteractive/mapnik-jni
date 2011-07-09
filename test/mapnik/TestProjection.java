@@ -1,5 +1,6 @@
 package mapnik;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -9,6 +10,11 @@ public class TestProjection {
 	public static void initMapnik() {
 		Mapnik.initialize();
 	}
+	@AfterClass
+	public static void tearDownMapnik() {
+		Setup.tearDown();
+	}
+
 
 	@Test
 	public void testForward() {

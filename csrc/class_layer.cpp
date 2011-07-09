@@ -7,13 +7,13 @@
 JNIEXPORT jlong JNICALL Java_mapnik_Layer_alloc
   (JNIEnv *env, jclass c, jstring namej, jstring srsj)
 {
-	ASSERT_INITIALIZED;
-
+	PREAMBLE;
 	refjavastring name(env, namej);
 	refjavastring srs(env, srsj);
 
 	mapnik::layer* layer=new mapnik::layer(name.stringz, srs.stringz);
 	return FROM_POINTER(layer);
+	TRAILER(0);
 }
 
 /*
@@ -22,11 +22,13 @@ JNIEXPORT jlong JNICALL Java_mapnik_Layer_alloc
  * Signature: (J)V
  */
 JNIEXPORT void JNICALL Java_mapnik_Layer_dealloc
-  (JNIEnv *env, jclass c, jlong ptr)
+  (JNIEnv *env, jobject, jlong ptr)
 {
+	PREAMBLE;
 	if (ptr) {
 		delete static_cast<mapnik::layer*>(TO_POINTER(ptr));
 	}
+	TRAILER_VOID;
 }
 
 /*
@@ -37,8 +39,10 @@ JNIEXPORT void JNICALL Java_mapnik_Layer_dealloc
 JNIEXPORT jstring JNICALL Java_mapnik_Layer_getName
   (JNIEnv *env, jobject layerobj)
 {
+	PREAMBLE;
 	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
 	return env->NewStringUTF(layer->name().c_str());
+	TRAILER(0);
 }
 
 /*
@@ -49,9 +53,11 @@ JNIEXPORT jstring JNICALL Java_mapnik_Layer_getName
 JNIEXPORT void JNICALL Java_mapnik_Layer_setName
   (JNIEnv *env, jobject layerobj, jstring sj)
 {
+	PREAMBLE;
 	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
 	refjavastring s(env, sj);
 	layer->set_name(s.stringz);
+	TRAILER_VOID;
 }
 
 /*
@@ -62,8 +68,10 @@ JNIEXPORT void JNICALL Java_mapnik_Layer_setName
 JNIEXPORT jstring JNICALL Java_mapnik_Layer_getTitle
 (JNIEnv *env, jobject layerobj)
 {
+	PREAMBLE;
 	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
 	return env->NewStringUTF(layer->title().c_str());
+	TRAILER(0);
 }
 
 /*
@@ -74,9 +82,11 @@ JNIEXPORT jstring JNICALL Java_mapnik_Layer_getTitle
 JNIEXPORT void JNICALL Java_mapnik_Layer_setTitle
 (JNIEnv *env, jobject layerobj, jstring sj)
 {
+	PREAMBLE;
 	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
 	refjavastring s(env, sj);
 	layer->set_title(s.stringz);
+	TRAILER_VOID;
 }
 
 /*
@@ -87,8 +97,10 @@ JNIEXPORT void JNICALL Java_mapnik_Layer_setTitle
 JNIEXPORT jstring JNICALL Java_mapnik_Layer_getAbstract
 (JNIEnv *env, jobject layerobj)
 {
+	PREAMBLE;
 	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
 	return env->NewStringUTF(layer->abstract().c_str());
+	TRAILER(0);
 }
 
 /*
@@ -99,9 +111,11 @@ JNIEXPORT jstring JNICALL Java_mapnik_Layer_getAbstract
 JNIEXPORT void JNICALL Java_mapnik_Layer_setAbstract
 (JNIEnv *env, jobject layerobj, jstring sj)
 {
+	PREAMBLE;
 	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
 	refjavastring s(env, sj);
 	layer->set_abstract(s.stringz);
+	TRAILER_VOID;
 }
 
 /*
@@ -112,8 +126,10 @@ JNIEXPORT void JNICALL Java_mapnik_Layer_setAbstract
 JNIEXPORT jstring JNICALL Java_mapnik_Layer_getSrs
 (JNIEnv *env, jobject layerobj)
 {
+	PREAMBLE;
 	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
 	return env->NewStringUTF(layer->srs().c_str());
+	TRAILER(0);
 }
 
 /*
@@ -124,9 +140,11 @@ JNIEXPORT jstring JNICALL Java_mapnik_Layer_getSrs
 JNIEXPORT void JNICALL Java_mapnik_Layer_setSrs
 (JNIEnv *env, jobject layerobj, jstring sj)
 {
+	PREAMBLE;
 	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
 	refjavastring s(env, sj);
 	layer->set_srs(s.stringz);
+	TRAILER_VOID;
 }
 
 /*
@@ -137,6 +155,7 @@ JNIEXPORT void JNICALL Java_mapnik_Layer_setSrs
 JNIEXPORT jobjectArray JNICALL Java_mapnik_Layer_getStyles
   (JNIEnv *env, jobject layerobj)
 {
+	PREAMBLE;
 	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
 	std::vector<std::string> &styles(layer->styles());
 
@@ -151,6 +170,7 @@ JNIEXPORT jobjectArray JNICALL Java_mapnik_Layer_getStyles
 	}
 
 	return ary;
+	TRAILER(0);
 }
 
 /*
@@ -161,6 +181,7 @@ JNIEXPORT jobjectArray JNICALL Java_mapnik_Layer_getStyles
 JNIEXPORT void JNICALL Java_mapnik_Layer_setStyles
   (JNIEnv *env, jobject layerobj, jobjectArray ary)
 {
+	PREAMBLE;
 	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
 	std::vector<std::string> &styles(layer->styles());
 	styles.clear();
@@ -173,6 +194,7 @@ JNIEXPORT void JNICALL Java_mapnik_Layer_setStyles
 			styles.push_back(s.stringz);
 		}
 	}
+	TRAILER_VOID;
 }
 
 /*
@@ -183,8 +205,10 @@ JNIEXPORT void JNICALL Java_mapnik_Layer_setStyles
 JNIEXPORT jdouble JNICALL Java_mapnik_Layer_getMinZoom
 (JNIEnv *env, jobject layerobj)
 {
+	PREAMBLE;
 	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
 	return layer->getMinZoom();
+	TRAILER(0);
 }
 
 /*
@@ -195,8 +219,10 @@ JNIEXPORT jdouble JNICALL Java_mapnik_Layer_getMinZoom
 JNIEXPORT void JNICALL Java_mapnik_Layer_setMinZoom
   (JNIEnv *env, jobject layerobj, jdouble z)
 {
+	PREAMBLE;
 	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
 	layer->setMinZoom(z);
+	TRAILER_VOID;
 }
 
 /*
@@ -207,8 +233,10 @@ JNIEXPORT void JNICALL Java_mapnik_Layer_setMinZoom
 JNIEXPORT jdouble JNICALL Java_mapnik_Layer_getMaxZoom
 (JNIEnv *env, jobject layerobj)
 {
+	PREAMBLE;
 	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
 	return layer->getMaxZoom();
+	TRAILER(0);
 }
 
 /*
@@ -219,8 +247,10 @@ JNIEXPORT jdouble JNICALL Java_mapnik_Layer_getMaxZoom
 JNIEXPORT void JNICALL Java_mapnik_Layer_setMaxZoom
 (JNIEnv *env, jobject layerobj, jdouble z)
 {
+	PREAMBLE;
 	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
 	layer->setMaxZoom(z);
+	TRAILER_VOID;
 }
 
 /*
@@ -231,8 +261,10 @@ JNIEXPORT void JNICALL Java_mapnik_Layer_setMaxZoom
 JNIEXPORT jboolean JNICALL Java_mapnik_Layer_isActive
 (JNIEnv *env, jobject layerobj)
 {
+	PREAMBLE;
 	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
 	return (jboolean)layer->isActive();
+	TRAILER(false);
 }
 
 /*
@@ -243,8 +275,10 @@ JNIEXPORT jboolean JNICALL Java_mapnik_Layer_isActive
 JNIEXPORT void JNICALL Java_mapnik_Layer_setActive
   (JNIEnv *env, jobject layerobj, jboolean b)
 {
+	PREAMBLE;
 	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
 	layer->setActive((bool)b);
+	TRAILER_VOID;
 }
 
 
@@ -256,8 +290,10 @@ JNIEXPORT void JNICALL Java_mapnik_Layer_setActive
 JNIEXPORT jboolean JNICALL Java_mapnik_Layer_isQueryable
 (JNIEnv *env, jobject layerobj)
 {
+	PREAMBLE;
 	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
 	return (jboolean)layer->isQueryable();
+	TRAILER(false);
 }
 
 /*
@@ -268,8 +304,10 @@ JNIEXPORT jboolean JNICALL Java_mapnik_Layer_isQueryable
 JNIEXPORT void JNICALL Java_mapnik_Layer_setQueryable
 (JNIEnv *env, jobject layerobj, jboolean b)
 {
+	PREAMBLE;
 	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
 	layer->setQueryable((bool)b);
+	TRAILER_VOID;
 }
 
 /*
@@ -280,8 +318,10 @@ JNIEXPORT void JNICALL Java_mapnik_Layer_setQueryable
 JNIEXPORT jboolean JNICALL Java_mapnik_Layer_isVisible
   (JNIEnv *env, jobject layerobj, jdouble scale)
 {
+	PREAMBLE;
 	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
 	return layer->isVisible(scale);
+	TRAILER(false);
 }
 
 /*
@@ -292,8 +332,10 @@ JNIEXPORT jboolean JNICALL Java_mapnik_Layer_isVisible
 JNIEXPORT jboolean JNICALL Java_mapnik_Layer_isClearLabelCache
 (JNIEnv *env, jobject layerobj)
 {
+	PREAMBLE;
 	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
 	return (jboolean)layer->clear_label_cache();
+	TRAILER(false);
 }
 
 /*
@@ -304,8 +346,10 @@ JNIEXPORT jboolean JNICALL Java_mapnik_Layer_isClearLabelCache
 JNIEXPORT void JNICALL Java_mapnik_Layer_setClearLabelCache
 (JNIEnv *env, jobject layerobj, jboolean b)
 {
+	PREAMBLE;
 	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
 	layer->set_clear_label_cache((bool)b);
+	TRAILER_VOID;
 }
 
 /*
@@ -316,8 +360,10 @@ JNIEXPORT void JNICALL Java_mapnik_Layer_setClearLabelCache
 JNIEXPORT jboolean JNICALL Java_mapnik_Layer_isCacheFeatures
 (JNIEnv *env, jobject layerobj)
 {
+	PREAMBLE;
 	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
 	return (jboolean)layer->cache_features();
+	TRAILER(false);
 }
 
 /*
@@ -328,8 +374,10 @@ JNIEXPORT jboolean JNICALL Java_mapnik_Layer_isCacheFeatures
 JNIEXPORT void JNICALL Java_mapnik_Layer_setCacheFeatures
 (JNIEnv *env, jobject layerobj, jboolean b)
 {
+	PREAMBLE;
 	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
 	layer->set_cache_features((bool)b);
+	TRAILER_VOID;
 }
 
 /*
@@ -340,15 +388,17 @@ JNIEXPORT void JNICALL Java_mapnik_Layer_setCacheFeatures
 JNIEXPORT jobject JNICALL Java_mapnik_Layer_getDatasource
   (JNIEnv *env, jobject layerobj)
 {
+	PREAMBLE;
 	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
 	mapnik::datasource_ptr ds=layer->datasource();
 	if (!ds) return 0;
 
 	mapnik::datasource_ptr* dspinned=new mapnik::datasource_ptr(ds);
-	jobject ret=env->AllocObject(CLASS_DATASOURCE.java_class);
-	env->SetLongField(ret, CLASS_DATASOURCE.ptr_field, FROM_POINTER(dspinned));
+	jobject ret=env->NewObject(CLASS_DATASOURCE, CTOR_NATIVEOBJECT);
+	env->SetLongField(ret, FIELD_PTR, FROM_POINTER(dspinned));
 
 	return ret;
+	TRAILER(0);
 }
 
 /*
@@ -359,6 +409,7 @@ JNIEXPORT jobject JNICALL Java_mapnik_Layer_getDatasource
 JNIEXPORT void JNICALL Java_mapnik_Layer_setDatasource
   (JNIEnv *env, jobject layerobj, jobject dsobject)
 {
+	PREAMBLE;
 	mapnik::layer* layer=LOAD_LAYER_POINTER(layerobj);
 
 	if (!dsobject) {
@@ -368,6 +419,7 @@ JNIEXPORT void JNICALL Java_mapnik_Layer_setDatasource
 
 	mapnik::datasource_ptr* dspinned=
 			static_cast<mapnik::datasource_ptr*>(
-					TO_POINTER(env->GetLongField(dsobject, CLASS_DATASOURCE.ptr_field)));
+					TO_POINTER(env->GetLongField(dsobject, FIELD_PTR)));
 	layer->set_datasource(*dspinned);
+	TRAILER_VOID;
 }

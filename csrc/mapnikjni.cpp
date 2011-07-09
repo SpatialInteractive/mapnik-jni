@@ -34,9 +34,11 @@
 JNIEXPORT void JNICALL Java_mapnik_Mapnik_nativeInit
   (JNIEnv *env, jclass c)
 {
+	PREAMBLE;
 	if (initialized) return;
 	if (init_ids(env))
 		initialized=true;
+	TRAILER_VOID;
 }
 
 /*

@@ -8,20 +8,13 @@ import java.util.Set;
  * @author stella
  *
  */
-public class FeatureTypeStyle {
-	private long ptr;
-	
+public class FeatureTypeStyle extends NativeObject {
 	private static native long alloc();
-	private static native void dealloc(long ptr);
+	native void dealloc(long ptr);
 	
 	public FeatureTypeStyle() {
 		ptr=alloc();
 	}
-	@Override
-	protected void finalize() throws Throwable {
-		dealloc(ptr);
-	}
-	
 	/**
 	 * Collect all attribute names referenced in rules
 	 * @return Set of attributes

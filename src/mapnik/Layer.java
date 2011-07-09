@@ -1,21 +1,15 @@
 package mapnik;
 
 
-public class Layer {
-	private long ptr;
-	
+public class Layer extends NativeObject {
 	private static native long alloc(String name, String srs);
-	private static native void dealloc(long ptr);
+	native void dealloc(long ptr);
 
 	public Layer(String name, String srs) {
 		ptr=alloc(name, srs);
 	}
 	public Layer(String name) {
 		this(name, Projection.LATLNG_PARAMS);
-	}
-	@Override
-	protected void finalize() throws Throwable {
-		dealloc(ptr);
 	}
 	
 	public native String getName();

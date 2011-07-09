@@ -4,7 +4,10 @@ import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 
@@ -42,13 +45,74 @@ public class Mapnik {
 		}
 	}
 	
+	private static Map<Class<? extends NativeObject>, AtomicInteger> nativeAllocCounts;
+	static {
+		nativeAllocCounts=new HashMap<Class<? extends NativeObject>, AtomicInteger>();
+		nativeAllocCounts.put(Datasource.class, new AtomicInteger());
+		nativeAllocCounts.put(FeatureSet.class, new AtomicInteger());
+		nativeAllocCounts.put(FeatureTypeStyle.class, new AtomicInteger());
+		nativeAllocCounts.put(Geometry.class, new AtomicInteger());
+		nativeAllocCounts.put(Image.class, new AtomicInteger());
+		nativeAllocCounts.put(Layer.class, new AtomicInteger());
+		nativeAllocCounts.put(MapDefinition.class, new AtomicInteger());
+		nativeAllocCounts.put(Projection.class, new AtomicInteger());
+		nativeAllocCounts.put(Query.class, new AtomicInteger());
+	}
+	
+	/**
+	 * Return a Map of Object type to allocation count of current active native allocations.
+	 * Native allocations are cleared either through an explicit call to dispose() or
+	 * finalization.
+	 * 
+	 * @return Map of object type to count for all counts greater than zero
+	 */
+	public static Map<String,Integer> getNativeAllocations() {
+		Map<String, Integer> ret=new HashMap<String, Integer>();
+		for (Map.Entry<Class<? extends NativeObject>, AtomicInteger> entry: nativeAllocCounts.entrySet()) {
+			int count=entry.getValue().get();
+			if (count==0) continue;
+			
+			String name=entry.getKey().getName();
+			int dotPos=name.lastIndexOf('.');
+			if (dotPos>=0) name=name.substring(dotPos+1);
+			
+			ret.put(name, count);
+		}
+		return ret;
+	}
+	
+	/**
+	 * Generate a brief textual report of outstanding native allocations
+	 */
+	public static CharSequence reportNativeAllocations() {
+		Map<String,Integer> counts=getNativeAllocations();
+		StringBuilder buffer=new StringBuilder();
+		buffer.append("MapnikAllocations(");
+		boolean first=true;
+		for (Map.Entry<String, Integer> entry: counts.entrySet()) {
+			if (first) first=false;
+			else buffer.append(", ");
+			buffer.append(entry.getKey()).append("=").append(entry.getValue());
+		}
+		buffer.append(")");
+		return buffer;
+	}
+	
+	static void incrementAlloc(Class<? extends NativeObject> clazz, int delta) {
+		AtomicInteger i=nativeAllocCounts.get(clazz);
+		if (i==null) {
+			throw new IllegalStateException("Not allocation counter defined for " + clazz.getName());
+		}
+		i.addAndGet(delta);
+	}
+	
 	private static boolean tryLoadLibrary(String path) {
 		if (loadedLibrary!=null) return true;
 		
 		File file=new File(path);
 		if (file.isFile()) {
 			// Load it without error checking.  We want the first that exists.
-			System.load(path);
+			System.load(file.getAbsolutePath());
 			loadedLibrary=path;
 			return true;
 		} else {

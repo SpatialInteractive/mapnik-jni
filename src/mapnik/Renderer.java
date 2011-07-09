@@ -12,5 +12,5 @@ public class Renderer {
 	 * @param map
 	 * @param image
 	 */
-	public static native void renderAgg(Map map, Image image);
+	public static native void renderAgg(MapDefinition map, Image image);
 }

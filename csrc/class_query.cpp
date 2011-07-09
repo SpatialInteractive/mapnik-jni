@@ -21,9 +21,11 @@ JNIEXPORT jlong JNICALL Java_mapnik_Query_alloc
  * Signature: (J)V
  */
 JNIEXPORT void JNICALL Java_mapnik_Query_dealloc
-  (JNIEnv *env, jclass c, jlong ptr)
+  (JNIEnv *env, jobject, jlong ptr)
 {
+	PREAMBLE;
 	delete static_cast<mapnik::query*>(TO_POINTER(ptr));
+	TRAILER_VOID;
 }
 
 /*

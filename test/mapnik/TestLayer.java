@@ -1,5 +1,6 @@
 package mapnik;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -9,6 +10,11 @@ public class TestLayer {
 	public static void initMapnik() {
 		Setup.initialize();
 	}
+	@AfterClass
+	public static void tearDownMapnik() {
+		Setup.tearDown();
+	}
+	
 
 	@Test
 	public void testCreate() {
@@ -35,7 +41,7 @@ public class TestLayer {
 
 	@Test
 	public void testMapLayers() {
-		Map map=new Map();
+		MapDefinition map=new MapDefinition();
 		assertEquals(0, map.getLayerCount());
 		
 		Layer layer;

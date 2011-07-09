@@ -6,8 +6,10 @@
 JNIEXPORT jlong JNICALL Java_mapnik_Image_alloc__II
   (JNIEnv *env, jclass c, jint width, jint height)
 {
+	PREAMBLE;
 	mapnik::image_32* im=new mapnik::image_32(width, height);
 	return FROM_POINTER(im);
+	TRAILER(0);
 }
 
 /*
@@ -37,12 +39,14 @@ JNIEXPORT jlong JNICALL Java_mapnik_Image_alloc__Lmapnik_Image_2
  * Signature: (J)J
  */
 JNIEXPORT void JNICALL Java_mapnik_Image_dealloc
-  (JNIEnv * env, jclass c, jlong ptr)
+  (JNIEnv * env, jobject, jlong ptr)
 {
+	PREAMBLE;
 	mapnik::image_32* im=static_cast<mapnik::image_32*>(TO_POINTER(ptr));
 	if (im) {
 		delete im;
 	}
+	TRAILER_VOID;
 }
 
 /*
