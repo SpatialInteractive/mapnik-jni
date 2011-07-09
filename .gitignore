@@ -1,6 +1,7 @@
 bin/
 build/
 wiki/
+pages/
 *.so
 *.jnilib
 *~

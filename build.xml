@@ -1,6 +1,6 @@
 <project name="mapnik_jni" default="all">
 	<property name="junit.jar" location="lib/junit-4.8.2.jar"/>
-	<property name="javadoc.dir" location="wiki/javadocs"/>
+	<property name="javadoc.dir" location="pages/javadocs"/>
 	
 	<target name="compile">
 		<mkdir dir="build/classes"/>
