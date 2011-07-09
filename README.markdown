@@ -15,9 +15,9 @@ Prerequisites
 Links
 -----
 
-* (JavaDocs)[http://spatialinteractive.github.com/mapnik-jni/javadocs/index.html]
-* (NanoMaps Server)[https://github.com/SpatialInteractive/nanomaps-server] A tile server.  One of the first things I wrote with the Java bindings.
-* (Mapnik Distiller)[https://github.com/SpatialInteractive/mapnik-distiller] Map data optimizer.  Another bit that I wrote with the Java bindings.
+* [JavaDocs](http://spatialinteractive.github.com/mapnik-jni/javadocs/index.html)
+* [NanoMaps Server](https://github.com/SpatialInteractive/nanomaps-server) A tile server.  One of the first things I wrote with the Java bindings.
+* [Mapnik Distiller](https://github.com/SpatialInteractive/mapnik-distiller) Map data optimizer.  Another bit that I wrote with the Java bindings.
 
 Building
 --------
