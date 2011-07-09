@@ -5,6 +5,11 @@ import java.util.Set;
 /**
  * Wraps a mapnik::featureset_ptr and the current mapnik::feature into a
  * java.sql.ResultSet type interface.
+ * <p>
+ * Note that geometries referenced off of the current feature will become
+ * invalid once the FeatureSet moves to the next feature or the FeatureSet
+ * is disposed.
+ * 
  * @author stella
  *
  */
@@ -22,6 +27,7 @@ public class FeatureSet extends NativeObject {
 	private Geometry[] feature_geometries;
 	
 	void dealloc(long ptr) {
+		disposeGeometries();
 		long localFeaturePtr=feature_ptr;
 		feature_ptr=0;
 		dealloc(ptr, localFeaturePtr);
@@ -31,6 +37,15 @@ public class FeatureSet extends NativeObject {
 	private native boolean _next();
 	private native Geometry[] _loadGeometries();
 	
+	private void disposeGeometries() {
+		if (feature_geometries!=null) {
+			for (int i=0; i<feature_geometries.length; i++) {
+				feature_geometries[i].dispose();
+			}
+			feature_geometries=null;
+		}
+	}
+	
 	// -- FeatureSet methods
 	/**
 	 * Moves to the next feature in the set.  Returns true if exists.
@@ -38,12 +53,7 @@ public class FeatureSet extends NativeObject {
 	 */
 	public boolean next() {
 		// First release the geometries
-		if (feature_geometries!=null) {
-			for (int i=0; i<feature_geometries.length; i++) {
-				feature_geometries[i].dispose();
-			}
-			feature_geometries=null;
-		}
+		disposeGeometries();
 		return _next();
 	}
 

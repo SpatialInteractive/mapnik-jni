@@ -1,6 +1,13 @@
 package mapnik;
 
 
+/**
+ * Wraps the mapnik::Layer value type.  When a Layer is read from or
+ * written to the map, it is copied.
+ * 
+ * @author stella
+ *
+ */
 public class Layer extends NativeObject {
 	private static native long alloc(String name, String srs);
 	native void dealloc(long ptr);

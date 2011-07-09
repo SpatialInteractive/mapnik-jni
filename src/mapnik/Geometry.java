@@ -1,5 +1,12 @@
 package mapnik;
 
+/**
+ * A mapnik::geometry_type instance.  These instances are always owned
+ * by the corresponding feature.
+ * 
+ * @author stella
+ *
+ */
 public class Geometry extends NativeObject {
 	// mapnik::geometry_type*
 	

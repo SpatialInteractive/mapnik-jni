@@ -3,8 +3,8 @@ package mapnik;
 import java.util.Set;
 
 /**
- * Mirrors the feature_type_style in mapnik c++
- *
+ * Wraps the mapnik::feature_type_style value type.
+ * 
  * @author stella
  *
  */
@@ -15,6 +15,7 @@ public class FeatureTypeStyle extends NativeObject {
 	public FeatureTypeStyle() {
 		ptr=alloc();
 	}
+	
 	/**
 	 * Collect all attribute names referenced in rules
 	 * @return Set of attributes

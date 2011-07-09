@@ -3,7 +3,26 @@ package mapnik;
 import java.util.Collection;
 
 /**
- * Wrapper around the Mapnik map object and friends
+ * Wrapper around the mapnik::Map object.
+ * <p>
+ * Several methods that are found elsewhere in the C++ code but operate exlusively
+ * on maps are located directly on this class:
+ * <ul>
+ * <li>loadMap
+ * <li>loadMapString
+ * <li>saveMap
+ * <li>saveMapToString
+ * </ul>
+ * <p>
+ * Not all child objects are implemented.
+ * <p>
+ * Note that the following child objects are value types.  When they are added to or
+ * read from a MapDefinition, the caller will be left with a copy.
+ * <ul>
+ * <li>Layer
+ * <li>FeatureTypeStyle
+ * </ul>
+ * 
  * @author stella
  *
  */
@@ -81,12 +100,12 @@ public class MapDefinition extends NativeObject {
 	public native void setBackgroundImage(String filename);
 	
 	// Save map
-	public native void saveMapToFile(String fileName, boolean explicitDefaults);
-	public native byte[] saveMapToBuffer(boolean explicitDefaults);
-	public void saveMapToFile(String fileName) {
-		saveMapToFile(fileName, false);
+	public native void saveMap(String fileName, boolean explicitDefaults);
+	public native String saveMapToString(boolean explicitDefaults);
+	public void saveMap(String fileName) {
+		saveMap(fileName, false);
 	}
-	public byte[] saveMapToBuffer() {
-		return saveMapToBuffer(false);
+	public String saveMapToString() {
+		return saveMapToString(false);
 	}
 }

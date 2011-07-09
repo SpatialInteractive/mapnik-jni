@@ -1,5 +1,12 @@
 package mapnik;
 
+/**
+ * Manage the registry of datasources.  To create a Datasource, use the create(...)
+ * method.
+ * 
+ * @author stella
+ *
+ */
 public class DatasourceCache {
 	public static native String[] pluginNames();
 	public static native String pluginDirectories();

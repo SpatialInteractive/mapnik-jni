@@ -665,10 +665,10 @@ JNIEXPORT void JNICALL Java_mapnik_MapDefinition_setBackgroundImage
 
 /*
  * Class:     mapnik_MapDefinition
- * Method:    saveMapToFile
+ * Method:    saveMap
  * Signature: (Ljava/lang/String;Z)V
  */
-JNIEXPORT void JNICALL Java_mapnik_MapDefinition_saveMapToFile
+JNIEXPORT void JNICALL Java_mapnik_MapDefinition_saveMap
   (JNIEnv *env, jobject mapobject, jstring filenamej, jboolean explicitDefaults)
 {
 	PREAMBLE;
@@ -686,8 +686,15 @@ JNIEXPORT void JNICALL Java_mapnik_MapDefinition_saveMapToFile
 
 /*
  * Class:     mapnik_MapDefinition
- * Method:    saveMapToBuffer
- * Signature: (Z)[B
+ * Method:    saveMapToString
+ * Signature: (Z)Ljava/lang/String;
  */
-JNIEXPORT jbyteArray JNICALL Java_mapnik_MapDefinition_saveMapToBuffer
-  (JNIEnv *, jobject, jboolean);
+JNIEXPORT jstring JNICALL Java_mapnik_MapDefinition_saveMapToString
+  (JNIEnv *env, jobject mapobject, jboolean explicit_defaults)
+{
+	PREAMBLE;
+	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+	std::string s=mapnik::save_map_to_string(*map, explicit_defaults);
+	return env->NewStringUTF(s.c_str());
+	TRAILER(0);
+}

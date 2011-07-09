@@ -423,18 +423,18 @@ JNIEXPORT void JNICALL Java_mapnik_MapDefinition_setBackgroundImage
 
 /*
  * Class:     mapnik_MapDefinition
- * Method:    saveMapToFile
+ * Method:    saveMap
  * Signature: (Ljava/lang/String;Z)V
  */
-JNIEXPORT void JNICALL Java_mapnik_MapDefinition_saveMapToFile
+JNIEXPORT void JNICALL Java_mapnik_MapDefinition_saveMap
   (JNIEnv *, jobject, jstring, jboolean);
 
 /*
  * Class:     mapnik_MapDefinition
- * Method:    saveMapToBuffer
- * Signature: (Z)[B
+ * Method:    saveMapToString
+ * Signature: (Z)Ljava/lang/String;
  */
-JNIEXPORT jbyteArray JNICALL Java_mapnik_MapDefinition_saveMapToBuffer
+JNIEXPORT jstring JNICALL Java_mapnik_MapDefinition_saveMapToString
   (JNIEnv *, jobject, jboolean);
 
 #ifdef __cplusplus
@@ -1114,10 +1114,10 @@ extern "C" {
 /*
  * Class:     mapnik_Renderer
  * Method:    renderAgg
- * Signature: (Lmapnik/MapDefinition;Lmapnik/Image;)V
+ * Signature: (Lmapnik/MapDefinition;Lmapnik/Image;DII)V
  */
 JNIEXPORT void JNICALL Java_mapnik_Renderer_renderAgg
-  (JNIEnv *, jclass, jobject, jobject);
+  (JNIEnv *, jclass, jobject, jobject, jdouble, jint, jint);
 
 #ifdef __cplusplus
 }
