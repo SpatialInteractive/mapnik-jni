@@ -6,6 +6,12 @@
 		<mkdir dir="build/classes"/>
 		<mkdir dir="csrc"/>
 		<javac srcdir="src" destdir="build/classes" debug="on" source="1.5" target="1.5" includeantruntime="false"/>
+		<mkdir dir="build/classes-tools"/>
+		<javac srcdir="tools" destdir="build/classes-tools" debug="on" source="1.5" target="1.5" includeantruntime="false">
+			<classpath>
+				<pathelement location="build/classes"/>
+			</classpath>
+		</javac>
 	</target>
 	
 	<target name="headers" depends="compile">
