@@ -193,6 +193,12 @@ public class Mapnik {
 			}
 		}
 		
+		if (!isThreadSafe()) {
+			System.err.println("WARNING! Mapnik JNI bindings were compiled against a non-threadsafe Mapnik library.");
+			System.err.println("The JVM is a threaded environment, running against a non-threadsafe Mapnik is highly");
+			System.err.println("not recommended!");
+		}
+		
 		if (register && !registered) {
 			registered=true;
 			String path;
@@ -227,4 +233,11 @@ public class Mapnik {
 	 * @return the Mapnik input plugins dir as reported by mapnik at compile time or null
 	 */
 	public static native String getInstalledInputPluginsDir();
+	
+	/**
+	 * If mapnik is not compiled threadsafe, a warning will be issued on initialization.
+	 * You can also query it here.
+	 * @return true if mapnik was compiled threadsafe
+	 */
+	public static native boolean isThreadSafe();
 }

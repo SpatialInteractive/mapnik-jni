@@ -71,3 +71,17 @@ JNIEXPORT jstring JNICALL Java_mapnik_Mapnik_getInstalledInputPluginsDir
 #endif
 }
 
+/*
+ * Class:     mapnik_Mapnik
+ * Method:    isThreadSafe
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_mapnik_Mapnik_isThreadSafe
+  (JNIEnv *env, jclass c)
+{
+#ifdef MAPNIK_THREADSAFE
+	return 1;
+#else
+	return 0;
+#endif
+}

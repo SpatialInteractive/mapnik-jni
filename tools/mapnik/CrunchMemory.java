@@ -50,6 +50,8 @@ public class CrunchMemory {
 	
 	public static void main(String[] args) throws IOException {
 		Mapnik.initialize();
+		System.err.println("MAPNIK Threadsafe=" + Mapnik.isThreadSafe());
+		
 		File file=new File("data/memorytest.mapnik.xml");
 		MapDefinition m=loadMap(file);
 		Box2d extent=new Box2d(-13614352.0,6044028.7,-13613129.0,6045251.7);

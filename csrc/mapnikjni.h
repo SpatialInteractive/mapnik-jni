@@ -74,6 +74,14 @@ JNIEXPORT jstring JNICALL Java_mapnik_Mapnik_getInstalledFontsDir
 JNIEXPORT jstring JNICALL Java_mapnik_Mapnik_getInstalledInputPluginsDir
   (JNIEnv *, jclass);
 
+/*
+ * Class:     mapnik_Mapnik
+ * Method:    isThreadSafe
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_mapnik_Mapnik_isThreadSafe
+  (JNIEnv *, jclass);
+
 #ifdef __cplusplus
 }
 #endif
