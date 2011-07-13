@@ -271,6 +271,22 @@ JNIEXPORT void JNICALL Java_mapnik_MapDefinition_addLayer
 
 /*
  * Class:     mapnik_MapDefinition
+ * Method:    _setAspectFixMode
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_MapDefinition__1setAspectFixMode
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     mapnik_MapDefinition
+ * Method:    _getAspectFixMode
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_mapnik_MapDefinition__1getAspectFixMode
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     mapnik_MapDefinition
  * Method:    getStyleNames
  * Signature: ()Ljava/util/Collection;
  */

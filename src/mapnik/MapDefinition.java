@@ -71,6 +71,17 @@ public class MapDefinition extends NativeObject {
 	public native void removeAllLayers();
 	public native void addLayer(Layer layer);
 	
+	// Aspect fix mode
+	public void setAspectFixMode(AspectFixMode m) {
+		_setAspectFixMode(m.nativeCode);
+	}
+	public AspectFixMode getAspectFixMode() {
+		return AspectFixMode.fromNativeCode(_getAspectFixMode());
+	}
+	private native void _setAspectFixMode(int v);
+	private native int _getAspectFixMode();
+	
+	
 	// Styles
 	public native Collection<String> getStyleNames();
 	public native FeatureTypeStyle getStyle(String name);

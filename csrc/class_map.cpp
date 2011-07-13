@@ -698,3 +698,34 @@ JNIEXPORT jstring JNICALL Java_mapnik_MapDefinition_saveMapToString
 	return env->NewStringUTF(s.c_str());
 	TRAILER(0);
 }
+
+/*
+ * Class:     mapnik_MapDefinition
+ * Method:    _setAspectFixMode
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_mapnik_MapDefinition__1setAspectFixMode
+  (JNIEnv *env, jobject mapobject, jint v)
+{
+	PREAMBLE;
+	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+	if (v<0||v>mapnik::Map::aspect_fix_mode_MAX) {
+		throw std::runtime_error("aspect_fix_mode value is out of range");
+	}
+	map->set_aspect_fix_mode((mapnik::Map::aspect_fix_mode)v);
+	TRAILER_VOID;
+}
+
+/*
+ * Class:     mapnik_MapDefinition
+ * Method:    _getAspectFixMode
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_mapnik_MapDefinition__1getAspectFixMode
+  (JNIEnv *env, jobject mapobject)
+{
+	PREAMBLE;
+	mapnik::Map* map=LOAD_MAP_POINTER(mapobject);
+	return (jint)map->get_aspect_fix_mode();
+	TRAILER(0);
+}
